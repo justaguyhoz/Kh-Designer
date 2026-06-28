@@ -54,5 +54,26 @@ export const projects: Project[] = mediaManifest
   .sort((a, b) => a.order - b.order)
   .map(({ order: _order, ...project }) => project)
 
-export const allVideos = projects.flatMap((project) => project.videos.map((video) => ({ ...video, projectTitle: project.title, poster: project.cover })))
+const videoTitles: Record<string, string> = {
+  'Charlie Hair rollers/BOF_ads + vid/BOF_vid 1.mp4': 'Conversion campaign 01',
+  'Charlie Hair rollers/BOF_ads + vid/BOF_vid 2.mp4': 'Conversion campaign 02',
+  'Charlie Hair rollers/MOF_ads + vid/MOF_Mega Marylin Set.mp4': 'Mega Marilyn campaign',
+  'Charlie Hair rollers/MOF_ads + vid/MOF_video_2.mp4': 'Consideration campaign',
+  'Charlie Hair rollers/TOF_ads + vid/TOF_video ad.mp4': 'Awareness campaign',
+  'Powertec/Outback Marine_Facebook Sales Campaign (1).mp4': 'Outback Marine campaign 01',
+  'Powertec/Outback Marine_Facebook Sales Campaign.mp4': 'Outback Marine campaign 02',
+  'Powertec/Powertec_Traffic Facebook Campaign.mp4': 'Powertec traffic campaign',
+  'Powertec/powertec-awarness-facebook-campaign.mp4': 'Powertec awareness campaign',
+  'Powertec/powertec-sales-facebook-campaign.mp4': 'Powertec sales campaign',
+  'Powertec/WatchAi_Wholesaler Campaign.mp4': 'WatchAi wholesale campaign 01',
+  'Powertec/watchai-wholesaler-campaign.mp4': 'WatchAi wholesale campaign 02',
+  'The Sycamore school/Campaign 1_this is Sycamore.mp4': 'This is Sycamore campaign',
+}
+
+export const allVideos = projects.flatMap((project) => project.videos.map((video) => ({
+  ...video,
+  displayTitle: videoTitles[video.filename] ?? video.label,
+  projectTitle: project.title,
+  poster: project.cover,
+})))
 export { mediaAudit }
