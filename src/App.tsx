@@ -85,6 +85,7 @@ function ProjectOverlay({ index, onClose, onChange }: { index: number; onClose: 
   })
 
   return <div className="overlay-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+    <button className="floating-close" onClick={onClose} aria-label="Close project"><span aria-hidden="true">×</span></button>
     <article className="project-overlay" role="dialog" aria-modal="true" aria-labelledby="project-title">
       <div className="overlay-toolbar"><span>KH.</span><button ref={closeRef} onClick={onClose}>Close <span aria-hidden="true">×</span></button></div>
       <header className="overlay-header"><div><p className="kicker">{project.category}</p><h2 id="project-title">{project.title}</h2></div><p>{project.description}</p></header>
