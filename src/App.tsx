@@ -67,9 +67,16 @@ function ProjectOverlay({ index, onClose, onChange }: { index: number; onClose: 
   const project = projects[index]
   const media = useMemo(() => orderedMedia(project), [project])
   const [showMore, setShowMore] = useState(false)
+  const [showFloatingClose, setShowFloatingClose] = useState(false)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const backdropRef = useRef<HTMLDivElement>(null)
   const visibleMedia = showMore ? media : media.slice(0, 5)
-  const changeProject = (nextIndex: number) => { setShowMore(false); onChange(nextIndex) }
+  const changeProject = (nextIndex: number) => {
+    setShowMore(false)
+    setShowFloatingClose(false)
+    if (backdropRef.current) backdropRef.current.scrollTop = 0
+    onChange(nextIndex)
+  }
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow
@@ -82,21 +89,23 @@ function ProjectOverlay({ index, onClose, onChange }: { index: number; onClose: 
     }
     window.addEventListener('keydown', onKeyDown)
     return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', onKeyDown) }
-  })
+  }, [index, onChange, onClose])
 
-  return <div className="overlay-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-    <button className="floating-close" onClick={onClose} aria-label="Close project"><span aria-hidden="true">×</span></button>
-    <article className="project-overlay" role="dialog" aria-modal="true" aria-labelledby="project-title">
-      <div className="overlay-toolbar"><span>KH.</span><button ref={closeRef} onClick={onClose}>Close <span aria-hidden="true">×</span></button></div>
-      <header className="overlay-header"><div><p className="kicker">{project.category}</p><h2 id="project-title">{project.title}</h2></div><p>{project.description}</p></header>
-      <div className="detail-gallery">{visibleMedia.map((item) => <MediaBlock key={item.src} media={item} project={project} />)}</div>
-      {!showMore && media.length > 5 && <button className="show-more" onClick={() => setShowMore(true)}>Show more work <Arrow /></button>}
-      <nav className="overlay-pager" aria-label="Project navigation">
-        <button onClick={() => changeProject((index - 1 + projects.length) % projects.length)}><Arrow back /> Previous project</button>
-        <button onClick={() => changeProject((index + 1) % projects.length)}>Next project <Arrow /></button>
-      </nav>
-    </article>
-  </div>
+  return <>
+    <div ref={backdropRef} className="overlay-backdrop" onScroll={(event) => setShowFloatingClose(event.currentTarget.scrollTop > 140)} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <article className="project-overlay" role="dialog" aria-modal="true" aria-labelledby="project-title">
+        <div className="overlay-toolbar"><span>KH.</span><button ref={closeRef} onClick={onClose}>Close <span aria-hidden="true">×</span></button></div>
+        <header className="overlay-header"><div><p className="kicker">{project.category}</p><h2 id="project-title">{project.title}</h2></div><p>{project.description}</p></header>
+        <div className="detail-gallery">{visibleMedia.map((item) => <MediaBlock key={item.src} media={item} project={project} />)}</div>
+        {!showMore && media.length > 5 && <button className="show-more" onClick={() => setShowMore(true)}>Show more work <Arrow /></button>}
+        <nav className="overlay-pager" aria-label="Project navigation">
+          <button onClick={() => changeProject((index - 1 + projects.length) % projects.length)}><Arrow back /> Previous project</button>
+          <button onClick={() => changeProject((index + 1) % projects.length)}>Next project <Arrow /></button>
+        </nav>
+      </article>
+    </div>
+    {showFloatingClose && <button className="floating-close" onClick={onClose} aria-label="Close project"><span aria-hidden="true">×</span></button>}
+  </>
 }
 
 function About() {
