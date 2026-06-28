@@ -4,19 +4,19 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "media:manifest": "node scripts/generate-media-manifest.mjs",
+    "dev": "node scripts/generate-media-manifest.mjs && vite",
+    "build": "node scripts/generate-media-manifest.mjs && tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "tsc -b --pretty false"
+    "lint": "node scripts/generate-media-manifest.mjs && tsc -b --pretty false"
   },
   "dependencies": {
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
-    "typescript": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "@types/react": "latest",
-    "@types/react-dom": "latest"
-  },
-  "devDependencies": {}
+    "typescript": "latest",
+    "vite": "latest"
+  }
 }

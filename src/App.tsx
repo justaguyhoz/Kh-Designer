@@ -1,162 +1,149 @@
-import { useEffect, useRef, useState } from 'react'
-import { projects, videoProjects, type Project } from './data/projects'
+import { useMemo, useState } from 'react'
+import { allVideos, mediaAudit, projects, type Project } from './data/projects'
 
-const Arrow = ({ direction = 'right' }: { direction?: 'left' | 'right' }) => (
-  <svg aria-hidden="true" viewBox="0 0 24 24" className={direction === 'left' ? 'flip' : ''}>
-    <path d="M5 12h14M13 6l6 6-6 6" />
-  </svg>
-)
+const Arrow = ({ back = false }: { back?: boolean }) => <span aria-hidden="true">{back ? '←' : '→'}</span>
 
 function Header() {
-  const [open, setOpen] = useState(false)
-  return <header className="header">
-    <a className="wordmark" href="#top" aria-label="Katty Hozavsky, home">KH<span>.</span></a>
-    <button className="menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="navigation">{open ? 'Close' : 'Menu'}</button>
-    <nav id="navigation" className={open ? 'nav open' : 'nav'} aria-label="Main navigation">
-      {['Work', 'Video', 'About', 'Contact'].map((item) => <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setOpen(false)}>{item}</a>)}
+  const [menuOpen, setMenuOpen] = useState(false)
+  return <header className="site-header">
+    <a className="logo" href="#top" aria-label="Katty Hozavsky home">KH.</a>
+    <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="main-nav">{menuOpen ? 'Close' : 'Menu'}</button>
+    <nav id="main-nav" className={menuOpen ? 'main-nav open' : 'main-nav'} aria-label="Main navigation">
+      {[
+        ['Work', '#top'], ['Projects', '#projects'], ['Motion / Video', '#motion'], ['About', '#about'], ['Contact', '#contact'],
+      ].map(([label, href]) => <a key={href} href={href} onClick={() => setMenuOpen(false)}>{label}</a>)}
     </nav>
   </header>
 }
 
 function Hero() {
   return <section className="hero" id="top">
-    <div className="hero-copy reveal">
-      <p className="eyebrow">Independent creative · Brisbane, Australia</p>
-      <h1>Visual ideas,<br/><em>made to move.</em></h1>
-      <p className="hero-intro">Katty Hozavsky is a Senior Graphic Designer &amp; Social Media Creator shaping brands, campaigns and digital stories.</p>
-      <div className="hero-actions">
-        <a className="button dark" href="#work">View selected work <Arrow /></a>
-        <a className="text-link" href="mailto:justakatty@gmail.com">Contact Katty <span>↗</span></a>
-      </div>
+    <p className="kicker">Senior Graphic Designer &amp; Social Media Creator</p>
+    <h1>I create clear,<br/><em>confident design</em><br/>built to connect.</h1>
+    <div className="hero-bottom">
+      <p>I work across brand, campaign, digital, social, packaging, print, EDMs and motion. This portfolio includes every supplied project asset.</p>
+      <a className="circle-link" href="#projects">View all work <Arrow /></a>
     </div>
-    <div className="hero-art reveal" aria-label="A selection of Katty's design work">
-      <div className="hero-card card-a"><img src="/projects/UN/United Nations_Covid19 Campaign.jpg" alt="United Nations Covid-19 campaign artwork" /></div>
-      <div className="hero-card card-b"><img src="/projects/Charlie Hair rollers/MOF_ads + vid/MOF_ad-1_long.jpg" alt="Charlii hair rollers social campaign" /></div>
-      <div className="hero-card card-c"><img src="/projects/Spinal life/TOF_back2work/26016 Back2Work_v3_square.jpg" alt="Spinal Life campaign artwork" /></div>
-      <span className="orbit orbit-one" /><span className="orbit orbit-two" />
-    </div>
-    <a className="scroll-note" href="#work">Scroll to explore <span>↓</span></a>
-  </section>
-}
-
-function ProjectCard({ project, index, onOpen }: { project: Project, index: number, onOpen: () => void }) {
-  return <button className={`project-card project-${(index % 4) + 1}`} onClick={onOpen} aria-label={`View ${project.title} project`}>
-    <span className="project-image">
-      <img src={project.images[0]} alt={`${project.title} — ${project.category}`} loading="lazy" />
-      <span className="view-mark">View project <Arrow /></span>
-    </span>
-    <span className="project-meta">
-      <span><strong>{project.title}</strong><small>{project.category}</small></span>
-      <span className="project-number">{String(index + 1).padStart(2, '0')}</span>
-    </span>
-  </button>
-}
-
-function ProjectGrid({ onOpen }: { onOpen: (index: number) => void }) {
-  return <section className="section work" id="work">
-    <div className="section-heading">
-      <div><p className="eyebrow">01 / Selected work</p><h2>Ideas with<br/><em>staying power.</em></h2></div>
-      <p>A considered selection of brand, campaign, packaging and digital work—each built for its own audience and moment.</p>
-    </div>
-    <div className="project-grid">
-      {projects.map((project, index) => <ProjectCard key={project.id} project={project} index={index} onOpen={() => onOpen(index)} />)}
+    <div className="hero-stats" aria-label="Portfolio media summary">
+      <span><strong>{mediaAudit.projects}</strong> Projects</span>
+      <span><strong>{mediaAudit.images}</strong> Images</span>
+      <span><strong>{mediaAudit.videos}</strong> Videos</span>
     </div>
   </section>
 }
 
-function ProjectModal({ index, onClose, onChange }: { index: number, onClose: () => void, onChange: (index: number) => void }) {
-  const project = projects[index]
-  const closeRef = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    closeRef.current?.focus()
-    const key = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-      if (event.key === 'ArrowRight') onChange((index + 1) % projects.length)
-      if (event.key === 'ArrowLeft') onChange((index - 1 + projects.length) % projects.length)
-    }
-    window.addEventListener('keydown', key)
-    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', key) }
-  }, [index, onChange, onClose])
-
-  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-    <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div className="modal-top">
-        <span>{String(index + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}</span>
-        <button ref={closeRef} className="close" onClick={onClose}>Close <span>×</span></button>
-      </div>
-      <div className="modal-intro">
-        <div><p className="eyebrow">{project.category}</p><h2 id="modal-title">{project.title}</h2></div>
-        <div><p>{project.description}</p><ul>{project.tags?.map(tag => <li key={tag}>{tag}</li>)}</ul></div>
-      </div>
-      <div className="modal-gallery">
-        {project.images.map((image, imageIndex) => <img key={image} src={image} alt={`${project.title} project image ${imageIndex + 1}`} loading={imageIndex ? 'lazy' : 'eager'} />)}
-      </div>
-      <div className="modal-nav">
-        <button onClick={() => onChange((index - 1 + projects.length) % projects.length)}><Arrow direction="left" /> Previous</button>
-        <button onClick={() => onChange((index + 1) % projects.length)}>Next project <Arrow /></button>
-      </div>
-    </section>
-  </div>
+function ProjectIndex({ activeId, onSelect }: { activeId: string; onSelect: (id: string) => void }) {
+  const selectProject = (id: string) => {
+    onSelect(id)
+    requestAnimationFrame(() => document.getElementById('project-view')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
+  return <section className="project-index section" id="projects">
+    <div className="section-title-row">
+      <div><p className="kicker">01 / Complete project index</p><h2>Every project.<br/>Every file.</h2></div>
+      <p>Choose any project to open its complete image and video archive. Preview cards use one consistent format; project galleries keep the original proportions.</p>
+    </div>
+    <div className="card-grid">
+      {projects.map((project, index) => <button className={project.id === activeId ? 'index-card active' : 'index-card'} key={project.id} onClick={() => selectProject(project.id)}>
+        <span className="card-image"><img src={project.cover} alt={`${project.title} project preview`} loading="lazy" /></span>
+        <span className="card-info"><span><strong>{project.title}</strong><small>{project.category}</small></span><span>{String(index + 1).padStart(2, '0')}</span></span>
+      </button>)}
+    </div>
+  </section>
 }
 
-function VideoSection() {
-  return <section className="section video-section" id="video">
-    <div className="section-heading light-heading">
-      <div><p className="eyebrow">02 / In motion</p><h2>Stories that<br/><em>don’t sit still.</em></h2></div>
-      <p>Short-form campaign creative designed for attention, clarity and the rhythm of the scroll.</p>
+function VideoPlayer({ src, title, poster }: { src: string; title: string; poster?: string }) {
+  return <figure className="video-item">
+    <video src={src} poster={poster} controls playsInline preload="metadata" aria-label={`${title} video`} />
+    <figcaption>{title}</figcaption>
+  </figure>
+}
+
+function ProjectDetail({ project, index, onSelect }: { project: Project; index: number; onSelect: (id: string) => void }) {
+  const previous = projects[(index - 1 + projects.length) % projects.length]
+  const next = projects[(index + 1) % projects.length]
+  return <article className="project-detail" key={project.id}>
+    <header className="detail-header">
+      <div><p className="kicker">Project {String(index + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}</p><h2>{project.title}</h2></div>
+      <div className="detail-summary"><p className="detail-category">{project.category}</p><p>{project.description}</p><p className="media-count">{project.images.length} images{project.videos.length ? ` + ${project.videos.length} videos` : ''}</p></div>
+    </header>
+    {project.images.length > 0 && <div className="editorial-gallery">
+      {project.images.map((image, imageIndex) => <figure key={image.src}>
+        <img src={image.src} alt={`${project.title}: ${image.label}`} loading={imageIndex < 2 ? 'eager' : 'lazy'} />
+        <figcaption>{image.label}</figcaption>
+      </figure>)}
+    </div>}
+    {project.videos.length > 0 && <section className="project-motion" aria-labelledby={`${project.id}-motion`}>
+      <h3 id={`${project.id}-motion`}>Motion</h3>
+      <div className="project-video-grid">{project.videos.map((video) => <VideoPlayer key={video.src} src={video.src} title={video.label} poster={project.cover} />)}</div>
+    </section>}
+    <nav className="project-pager" aria-label="Project navigation">
+      <button onClick={() => onSelect(previous.id)}><Arrow back /> <span>Previous<br/><strong>{previous.title}</strong></span></button>
+      <button onClick={() => onSelect(next.id)}><span>Next<br/><strong>{next.title}</strong></span> <Arrow /></button>
+    </nav>
+  </article>
+}
+
+function ProjectBrowser({ activeId, onSelect }: { activeId: string; onSelect: (id: string) => void }) {
+  const activeIndex = Math.max(0, projects.findIndex((project) => project.id === activeId))
+  const activeProject = projects[activeIndex]
+  return <section className="project-browser section" id="project-view">
+    <div className="project-selector-mobile">
+      <label htmlFor="project-select">Current project</label>
+      <select id="project-select" value={activeId} onChange={(event) => onSelect(event.target.value)}>
+        {projects.map((project) => <option value={project.id} key={project.id}>{project.title}</option>)}
+      </select>
     </div>
-    <div className="video-grid">
-      {videoProjects.map((video, index) => <article className="video-card" key={video.src}>
-        <div className="video-frame">
-          <video src={video.src} poster={video.poster} muted loop playsInline autoPlay preload={index < 2 ? 'metadata' : 'none'} aria-label={`${video.title} video`} />
-          <span className="sound-note">Muted · Loop</span>
-        </div>
-        <div><h3>{video.title}</h3><p>{video.category}</p></div>
-      </article>)}
+    <aside className="project-sidebar" aria-label="Project list">
+      <p className="kicker">Project list</p>
+      <ol>{projects.map((project, index) => <li key={project.id}><button className={project.id === activeId ? 'active' : ''} onClick={() => onSelect(project.id)}><span>{String(index + 1).padStart(2, '0')}</span>{project.title}</button></li>)}</ol>
+    </aside>
+    <ProjectDetail project={activeProject} index={activeIndex} onSelect={onSelect} />
+  </section>
+}
+
+function Motion() {
+  return <section className="motion section" id="motion">
+    <div className="section-title-row inverse">
+      <div><p className="kicker">02 / Motion and video</p><h2>All motion,<br/>in one place.</h2></div>
+      <p>Every supplied video is available here and inside its related project. Each player preserves the original aspect ratio and includes sound controls.</p>
     </div>
+    <div className="motion-grid">{allVideos.map((video) => <article key={`${video.projectTitle}-${video.src}`}>
+      <VideoPlayer src={video.src} title={video.label} poster={video.poster} />
+      <p>{video.projectTitle}</p>
+    </article>)}</div>
   </section>
 }
 
 function About() {
-  return <section className="section about" id="about">
-    <p className="eyebrow">03 / About</p>
-    <div className="about-grid">
-      <h2>Design with clarity.<br/>Creative with <em>character.</em></h2>
-      <div className="about-copy">
-        <p>Katty Hozavsky is a senior graphic designer and social media creator working across brand identity, campaign creative, digital design, print, packaging, EDMs and social content.</p>
-        <p>Her approach balances visual instinct with practical thinking—making work that feels considered, communicates quickly and stays true to the brand behind it.</p>
-        <div className="services">
-          <span>Brand identity</span><span>Campaign creative</span><span>Packaging</span><span>Social content</span><span>Digital &amp; EDM</span><span>Print design</span>
-        </div>
-      </div>
+  return <section className="about section" id="about">
+    <p className="kicker">03 / About</p>
+    <div className="about-layout">
+      <h2>I turn ideas into<br/><em>visual systems</em><br/>that work.</h2>
+      <div><p>I am a senior graphic designer and social media creator working across brand identity, campaign creative, digital design, print, packaging, EDMs and motion.</p><p>I bring visual instinct and practical thinking together to make work that communicates clearly, feels considered and stays consistent across formats.</p><ul><li>Brand identity</li><li>Campaign creative</li><li>Social content</li><li>Packaging</li><li>Print and EDM</li><li>Motion design</li></ul></div>
     </div>
   </section>
 }
 
 function Contact() {
-  return <section className="contact" id="contact">
-    <p className="eyebrow">04 / Get in touch</p>
-    <div className="contact-main">
-      <h2>Have something<br/>good in mind?</h2>
-      <a href="mailto:justakatty@gmail.com" aria-label="Email Katty at justakatty@gmail.com">Let’s talk <span>↗</span></a>
-    </div>
-    <div className="contact-bottom">
-      <p>For freelance, contract, campaign and brand design enquiries.</p>
-      <a href="mailto:justakatty@gmail.com">justakatty@gmail.com</a>
-    </div>
+  return <section className="contact section" id="contact">
+    <p className="kicker">04 / Contact</p>
+    <h2>Let’s make<br/>something <em>strong.</em></h2>
+    <div className="contact-row"><p>I am open to freelance, contract and in-house senior design opportunities.</p><a href="mailto:justakatty@gmail.com">justakatty@gmail.com <span>↗</span></a></div>
   </section>
 }
 
 function App() {
-  const [selected, setSelected] = useState<number | null>(null)
-  const close = () => setSelected(null)
+  const initialId = useMemo(() => projects[0]?.id ?? '', [])
+  const [activeId, setActiveId] = useState(initialId)
+  const selectProject = (id: string) => {
+    setActiveId(id)
+    window.history.replaceState(null, '', `#project-view`)
+    requestAnimationFrame(() => document.getElementById('project-view')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+  }
   return <>
     <Header />
-    <main><Hero /><ProjectGrid onOpen={setSelected} /><VideoSection /><About /><Contact /></main>
-    <footer><a href="#top">KH<span>.</span></a><p>© 2026 Katty Hozavsky. All rights reserved.</p><a href="#top">Back to top ↑</a></footer>
-    {selected !== null && <ProjectModal index={selected} onClose={close} onChange={setSelected} />}
+    <main><Hero /><ProjectIndex activeId={activeId} onSelect={selectProject} /><ProjectBrowser activeId={activeId} onSelect={selectProject} /><Motion /><About /><Contact /></main>
+    <footer><a className="logo" href="#top">KH.</a><p>© 2026 Katty Hozavsky. All rights reserved.</p><a href="#top">Back to top ↑</a></footer>
   </>
 }
 
