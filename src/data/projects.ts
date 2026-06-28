@@ -70,10 +70,14 @@ const videoTitles: Record<string, string> = {
   'The Sycamore school/Campaign 1_this is Sycamore.mp4': 'This is Sycamore campaign',
 }
 
-export const allVideos = projects.flatMap((project) => project.videos.map((video) => ({
+export const videoPoster = (projectId: string, videoIndex: number) => `/video-posters/${projectId}-${String(videoIndex + 1).padStart(2, '0')}.jpg`
+
+export const allVideos = projects.flatMap((project) => project.videos.map((video, videoIndex) => ({
   ...video,
   displayTitle: videoTitles[video.filename] ?? video.label,
   projectTitle: project.title,
-  poster: project.cover,
+  poster: videoPoster(project.id, videoIndex),
 })))
+
+export const videoTitle = (filename: string, fallback: string) => videoTitles[filename] ?? fallback
 export { mediaAudit }
