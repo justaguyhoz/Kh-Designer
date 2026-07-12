@@ -63,10 +63,11 @@ h1, h2, h3 { font-weight: 500; letter-spacing: -.045em; line-height: .94; }
 .discipline-tags span { padding: 7px 11px; border: 1px solid var(--rose-line); border-radius: 999px; color: var(--muted); background: rgba(255,255,255,.55); font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
 .hero-composition { min-height: 350px; position: relative; }
 .media-frame { margin: 0; overflow: hidden; border: 1px solid rgba(236, 209, 207, .75); border-radius: var(--radius); background: #fff; box-shadow: var(--soft-shadow); }
-.media-frame img, .media-frame video { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+.media-frame img { width: 100%; height: auto; object-fit: contain; transition: transform .7s ease; }
+.media-frame video { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
 .media-frame:hover img, .media-frame:hover video { transform: scale(1.025); }
-.hero-card { height: clamp(260px, 33vw, 418px); transform: translateX(2%); }
-.quote-card { width: min(46%, 390px); min-height: 150px; padding: clamp(18px, 3vw, 34px); position: absolute; right: 4%; bottom: -6%; display: flex; flex-direction: column; justify-content: center; border: 1px solid rgba(236, 209, 207, .8); border-radius: var(--radius); background: rgba(255,250,247,.9); box-shadow: var(--shadow); }
+.hero-card { transform: translateX(2%); }
+.quote-card { width: min(42%, 340px); min-height: 132px; margin: -26px 5% 0 auto; padding: clamp(17px, 2.5vw, 28px); position: relative; z-index: 2; display: flex; flex-direction: column; justify-content: center; border: 1px solid rgba(236, 209, 207, .8); border-radius: var(--radius); background: #fffaf7; box-shadow: var(--shadow); }
 .quote-card span { height: 22px; color: var(--ink); font-size: 70px; line-height: .55; }
 .quote-card p { margin: 4px 0 14px; font-size: clamp(24px, 3.5vw, 48px); line-height: .95; letter-spacing: -.055em; }
 .quote-card small { color: var(--muted); font-size: 13px; line-height: 1.4; }
@@ -82,7 +83,7 @@ h1, h2, h3 { font-weight: 500; letter-spacing: -.045em; line-height: .94; }
 .stage-composition aside span { margin-bottom: 18px; width: auto; height: auto; color: var(--rose); background: none; box-shadow: none; font-size: clamp(44px, 5vw, 74px); line-height: .8; justify-content: flex-start; }
 .stage-composition h3 { margin: 0 0 12px; font-size: clamp(25px, 2.6vw, 36px); }
 .stage-composition aside p { margin: 0; color: var(--rose); font-size: 18px; font-style: italic; line-height: 1.25; }
-.stage-composition .media-frame { min-height: 208px; }
+.stage-composition .media-frame { min-height: 0; align-self: start; }
 .stage-composition .span-2 { grid-column: span 2; }
 .portrait-card { min-height: 300px; }
 .dark-card { background: #2a1716; }
@@ -123,7 +124,7 @@ footer { min-height: 86px; padding: 24px clamp(18px, 4vw, 52px); display: flex; 
   .hero { min-height: auto; }
   .hero-note { max-width: 520px; }
   .charlii-title h2 { max-width: 720px; }
-  .quote-card { width: min(64%, 370px); }
+  .quote-card { width: min(60%, 340px); }
   .funnel-strip { grid-template-columns: 1fr; gap: 10px; }
   .stage-composition { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .stage-composition aside { grid-column: 1 / -1; padding: 12px 0 4px; display: grid; grid-template-columns: 70px 1fr; gap: 16px; align-items: center; }
@@ -149,15 +150,15 @@ footer { min-height: 86px; padding: 24px clamp(18px, 4vw, 52px); display: flex; 
   .charlii-title h2 { font-size: clamp(54px, 15vw, 74px); }
   .subtitle { font-size: 24px; }
   .hero-composition { min-height: 360px; }
-  .hero-card { height: 310px; transform: translateX(0); }
-  .quote-card { width: 78%; right: -3px; bottom: -34px; padding: 18px; }
+  .hero-card { transform: translateX(0); }
+  .quote-card { width: 76%; margin: -26px 0 0 auto; padding: 18px; }
   .quote-card p { font-size: 29px; }
   .funnel-strip { margin-top: 48px; }
   .stage-composition { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
   .stage-composition aside { grid-column: 1 / -1; grid-template-columns: 54px 1fr; }
   .stage-composition aside p { grid-column: 1 / -1; margin-top: 0; font-size: 16px; }
   .stage-composition .span-2 { grid-column: 1 / -1; }
-  .stage-composition .media-frame { min-height: 160px; border-radius: 13px; }
+  .stage-composition .media-frame { min-height: 0; border-radius: 13px; }
   .portrait-card { min-height: 235px; }
   .lift-a, .lift-b, .lift-c { transform: none; }
   .video-rail { display: flex; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x mandatory; }
