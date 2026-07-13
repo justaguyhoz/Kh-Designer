@@ -1,13 +1,16 @@
 import { mediaAudit, mediaManifest, type MediaItem } from './mediaManifest.generated'
 
+export type PortfolioDiscipline = 'social-ads' | 'organic-social' | 'magazine-ads' | 'branding' | 'video' | 'packaging' | 'edm' | 'brochure'
 export type MediaPresentation = 'wide' | 'square' | 'portrait' | 'full-artwork'
 
 export type PortfolioMedia = MediaItem & {
+  id: string
   type: 'image' | 'video'
   alt: string
-  role?: 'hero' | 'supporting' | 'detail' | 'background'
   poster?: string
   presentation?: MediaPresentation
+  caption?: string
+  isDuplicateOf?: string
 }
 
 export type CreativeDirection = {
@@ -20,9 +23,17 @@ export type CreativeDirection = {
 export type PortfolioMediaGroup = {
   id: string
   title?: string
-  theme?: string
+  discipline: PortfolioDiscipline
   initialVisibleCount?: number
   media: PortfolioMedia[]
+}
+
+export type PortfolioCreativeSet = {
+  id: string
+  title: string
+  disciplines: PortfolioDiscipline[]
+  creativeDirection?: CreativeDirection
+  mediaGroups: PortfolioMediaGroup[]
 }
 
 export type PortfolioProject = {
@@ -30,235 +41,51 @@ export type PortfolioProject = {
   folder: string
   client: string
   title: string
-  disciplines: string[]
-  categories: string[]
-  creativeDirection?: CreativeDirection
-  description?: string
+  introduction?: string
+  creativeSets: PortfolioCreativeSet[]
   media: PortfolioMedia[]
-  groups: PortfolioMediaGroup[]
-  featured?: boolean
-  displayTheme?: string
 }
 
 type ProjectMeta = {
   client: string
   title: string
-  disciplines: string[]
-  categories: string[]
   order: number
-  creativeDirection?: CreativeDirection
-  featured?: boolean
-  displayTheme?: string
 }
 
 const projectMeta: Record<string, ProjectMeta> = {
-  'AUDI': {
-    client: 'Audi',
-    title: 'Audi Q7',
-    disciplines: ['Magazine ads'],
-    categories: ['Magazine Ads'],
-    order: 1,
-    creativeDirection: {
-      colors: ['#0b0b0b', '#6d7070', '#cfd4d2', '#ffffff', '#e43d64'],
-      typography: 'Layered display type with compact sans serif support',
-      visualStyle: 'Monochrome automotive poster treatment with a focused product reveal.',
-      messaging: ['Audi Q7'],
-    },
-  },
-  'Australis Music Group': {
-    client: 'Australis',
-    title: 'Orange Amplifiers brand guide and TAC event',
-    disciplines: ['Branding', 'Events'],
-    categories: ['Branding'],
-    order: 2,
-    creativeDirection: {
-      colors: ['#f36f21', '#171313', '#f6f0e7', '#ffffff', '#8f6a4a'],
-      typography: 'Editorial serif paired with practical product-table typography',
-      visualStyle: 'Brand-guide layouts, event collateral and amplifier product detail.',
-      messaging: ['Orange Amplifiers', 'TAC event'],
-    },
-  },
-  'Charlie Hair rollers': {
-    client: 'Charlii',
-    title: 'Charlii Hair Rollers',
-    disciplines: ['Social', 'Campaign', 'Motion'],
-    categories: ['Social Ads', 'Video'],
-    order: 3,
-    featured: true,
-    displayTheme: 'charlii',
-    creativeDirection: {
-      colors: ['#f7dada', '#d27b88', '#fff3ef', '#b88a58', '#2a1716', '#ffffff'],
-      typography: 'High-contrast serif with compact social ad support text',
-      visualStyle: 'Soft blush beauty imagery contrasted with darker brown-and-gold product scenes.',
-      messaging: ['Salon Results at home', 'No heat damage', 'Mega Marilyn Stylist Set'],
-    },
-  },
-  'Elemental Studio': {
-    client: 'Elemental',
-    title: 'Elemental Studio logo and business cards',
-    disciplines: ['Branding', 'Business cards'],
-    categories: ['Branding'],
-    order: 4,
-    creativeDirection: {
-      colors: ['#111111', '#f5f0e8', '#d4c3aa', '#ffffff'],
-      typography: 'Minimal serif identity type',
-      visualStyle: 'Quiet identity system with logo and business-card presentation.',
-      messaging: ['Elemental Studio'],
-    },
-  },
-  'FaceitGraphix': {
-    client: 'Faceit',
-    title: 'Faceit Graphix branding and wrap',
-    disciplines: ['Branding', 'Vehicle wraps'],
-    categories: ['Branding'],
-    order: 5,
-    creativeDirection: {
-      colors: ['#101010', '#f1f1f1', '#c9c9c9', '#e53c34'],
-      typography: 'Bold sans serif identity type',
-      visualStyle: 'Branding system applied across vehicle-wrap artwork.',
-      messaging: ['Faceit Graphix'],
-    },
-  },
-  'Hardtuned': {
-    client: 'Hardtuned',
-    title: 'Fashion EDM',
-    disciplines: ['EDM', 'Editorial'],
-    categories: ['Branding'],
-    order: 6,
-    creativeDirection: {
-      colors: ['#0f0f0f', '#f7f7f7', '#d9d0c8', '#8a817d'],
-      typography: 'Fashion editorial typography with restrained sans serif details',
-      visualStyle: 'Wide and tall EDM artwork with monochrome fashion imagery.',
-      messaging: ['Fashion EDM'],
-    },
-  },
-  'Kean Construction group': {
-    client: 'Kean',
-    title: 'Organic social posts',
-    disciplines: ['Social'],
-    categories: ['Organic Social'],
-    order: 7,
-    creativeDirection: {
-      colors: ['#113b64', '#f1c232', '#ffffff', '#d7e1ea'],
-      typography: 'Geometric sans serif social post typography',
-      visualStyle: 'Construction updates and project-led organic social tiles.',
-      messaging: ['Organic social posts'],
-    },
-  },
-  'Powertec': {
-    client: 'Powertec',
-    title: 'Magazine, social and packaging designs',
-    disciplines: ['Magazine ads', 'Social', 'Packaging', 'Motion'],
-    categories: ['Magazine Ads', 'Social Ads', 'Branding', 'Video'],
-    order: 8,
-    creativeDirection: {
-      colors: ['#06090d', '#004b8d', '#f4b000', '#ffffff', '#8fa3b8'],
-      typography: 'Industrial sans serif with product campaign display type',
-      visualStyle: 'Technical product boards, packaging presentations and campaign video assets.',
-      messaging: ['Powertec', 'WatchAi', 'Outback Marine'],
-    },
-  },
-  'Real Estate': {
-    client: 'Real Estate',
-    title: 'Brochure designs',
-    disciplines: ['Brochures', 'Editorial'],
-    categories: ['Branding'],
-    order: 9,
-    creativeDirection: {
-      colors: ['#101010', '#ffffff', '#d8d2c7', '#8f8174'],
-      typography: 'Editorial serif and neutral brochure typography',
-      visualStyle: 'Landscape property brochure layouts with image-led spreads.',
-      messaging: ['Brochure designs'],
-    },
-  },
-  'Spinal life': {
-    client: 'Spinal',
-    title: 'Organic social',
-    disciplines: ['Social'],
-    categories: ['Organic Social', 'Social Ads'],
-    order: 10,
-    creativeDirection: {
-      colors: ['#18365f', '#f05a28', '#ffffff', '#dce6ee'],
-      typography: 'Accessible sans serif social campaign typography',
-      visualStyle: 'Social campaign assets across square, portrait and landscape placements.',
-      messaging: ['Organic social'],
-    },
-  },
-  'The Brooklyn_Wine & Tapas Bar': {
-    client: 'Brooklyn',
-    title: 'Organic social',
-    disciplines: ['Social'],
-    categories: ['Organic Social'],
-    order: 11,
-    creativeDirection: {
-      colors: ['#14100d', '#c8a063', '#f7f0e6', '#ffffff'],
-      typography: 'Hospitality editorial type with social layout structure',
-      visualStyle: 'Tall organic social artwork for wine and tapas content.',
-      messaging: ['Organic social'],
-    },
-  },
-  'The Sycamore school': {
-    client: 'Sycamore',
-    title: 'Social ads',
-    disciplines: ['Social', 'Campaign', 'Motion'],
-    categories: ['Social Ads', 'Organic Social', 'Video'],
-    order: 12,
-    creativeDirection: {
-      colors: ['#502c83', '#f7b733', '#ffffff', '#58a6d6'],
-      typography: 'Friendly sans serif campaign typography',
-      visualStyle: 'School campaign and organic social sets in multiple ad ratios.',
-      messaging: ['This is Sycamore'],
-    },
-  },
-  'UN': {
-    client: 'UN',
-    title: 'United Nations Covid-19 Campaign',
-    disciplines: ['Magazine ads'],
-    categories: ['Magazine Ads'],
-    order: 13,
-    creativeDirection: {
-      colors: ['#5b92d0', '#ffffff', '#1f2e44', '#d9e8f6'],
-      typography: 'Clear public-information sans serif typography',
-      visualStyle: 'Portrait campaign posters with institutional blue-and-white hierarchy.',
-      messaging: ['United Nations Covid-19 Campaign'],
-    },
-  },
-  'Vetner': {
-    client: 'Vetner',
-    title: 'Social ads',
-    disciplines: ['Social'],
-    categories: ['Social Ads', 'Organic Social'],
-    order: 14,
-    creativeDirection: {
-      colors: ['#0f1b25', '#f4a52c', '#ffffff', '#b9c5cf'],
-      typography: 'Bold utility-focused sans serif social typography',
-      visualStyle: 'Product and trade campaign assets across landscape, square and portrait ratios.',
-      messaging: ['Social ads'],
-    },
-  },
-  'All Day Workwear': {
-    client: 'All Day Workwear',
-    title: 'Campaign banners',
-    disciplines: ['Social'],
-    categories: ['Social Ads'],
-    order: 15,
-    creativeDirection: {
-      colors: ['#101010', '#f2b233', '#ffffff', '#8f8f8f'],
-      typography: 'Bold retail campaign sans serif',
-      visualStyle: 'Square campaign banner artwork for workwear product promotion.',
-      messaging: ['Campaign banners'],
-    },
-  },
+  'AUDI': { client: 'Audi', title: 'Audi Q7', order: 1 },
+  'Australis Music Group': { client: 'Australis', title: 'Orange Amplifiers brand guide and TAC event', order: 2 },
+  'Charlie Hair rollers': { client: 'Charlii', title: 'Charlii Hair Rollers', order: 3 },
+  'Elemental Studio': { client: 'Elemental', title: 'Elemental Studio logo and business cards', order: 4 },
+  'FaceitGraphix': { client: 'Faceit', title: 'Faceit Graphix branding and wrap', order: 5 },
+  'Hardtuned': { client: 'Hardtuned', title: 'Fashion EDM', order: 6 },
+  'Kean Construction group': { client: 'Kean', title: 'Organic social posts', order: 7 },
+  'Powertec': { client: 'Powertec', title: 'Magazine, social and packaging designs', order: 8 },
+  'Real Estate': { client: 'Real Estate', title: 'Brochure designs', order: 9 },
+  'Spinal life': { client: 'Spinal', title: 'Organic social', order: 10 },
+  'The Brooklyn_Wine & Tapas Bar': { client: 'Brooklyn', title: 'Organic social', order: 11 },
+  'The Sycamore school': { client: 'Sycamore', title: 'Social ads', order: 12 },
+  'UN': { client: 'UN', title: 'United Nations Covid-19 Campaign', order: 13 },
+  'Vetner': { client: 'Vetner', title: 'Social ads', order: 14 },
+  'All Day Workwear': { client: 'All Day Workwear', title: 'Campaign banners', order: 15 },
 }
 
-export const categoryFilters = ['All Work', 'Social Ads', 'Organic Social', 'Magazine Ads', 'Branding', 'Video']
+export const categoryFilters = ['Projects', 'Social Ads', 'Organic Social', 'Magazine Ads', 'Branding', 'Video'] as const
+
+export const filterDisciplines: Record<string, PortfolioDiscipline | undefined> = {
+  'Social Ads': 'social-ads',
+  'Organic Social': 'organic-social',
+  'Magazine Ads': 'magazine-ads',
+  'Branding': 'branding',
+  'Video': 'video',
+}
 
 const slug = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
 
 const videoTitles: Record<string, string> = {
   'Charlie Hair rollers/BOF_ads + vid/BOF_vid 1.mp4': 'BOF remarketing video 01',
   'Charlie Hair rollers/BOF_ads + vid/BOF_vid 2.mp4': 'BOF remarketing video 02',
-  'Charlie Hair rollers/MOF_ads + vid/MOF_Mega Marylin Set.mp4': 'Mega Marylin stylist set video',
+  'Charlie Hair rollers/MOF_ads + vid/MOF_Mega Marylin Set.mp4': 'Mega Marilyn stylist set video',
   'Charlie Hair rollers/MOF_ads + vid/MOF_video_2.mp4': 'MOF sales video',
   'Charlie Hair rollers/TOF_ads + vid/TOF_video ad.mp4': 'TOF awareness video',
   'Powertec/Outback Marine_Facebook Sales Campaign (1).mp4': 'Outback Marine sales campaign 01',
@@ -272,141 +99,331 @@ const videoTitles: Record<string, string> = {
 }
 
 const altFrom = (projectTitle: string, label: string) => `${projectTitle} portfolio media: ${label}`
-
 export const videoPoster = (projectId: string, videoIndex: number) => `/video-posters/${projectId}-${String(videoIndex + 1).padStart(2, '0')}.jpg`
 export const videoTitle = (filename: string, fallback: string) => videoTitles[filename] ?? fallback
 
-const defaultPresentation = (media: PortfolioMedia): MediaPresentation => {
+const defaultPresentation = (media: MediaItem): MediaPresentation => {
   if (media.aspect === 'portrait') return 'portrait'
   if (media.aspect === 'square') return 'square'
   return 'wide'
 }
 
-const withPresentation = (media: PortfolioMedia, presentation?: MediaPresentation): PortfolioMedia => ({
-  ...media,
-  presentation: presentation ?? media.presentation ?? defaultPresentation(media),
-})
+const byName = (media: PortfolioMedia[], patterns: Array<string | RegExp>) => media.filter((item) =>
+  patterns.some((pattern) => typeof pattern === 'string' ? item.filename.includes(pattern) : pattern.test(item.filename)))
 
-const makeGroup = (
+const withPresentation = (media: PortfolioMedia[], presentation?: MediaPresentation) =>
+  media.map((item) => ({ ...item, presentation: presentation ?? item.presentation ?? defaultPresentation(item) }))
+
+const unique = (media: PortfolioMedia[]) => {
+  const seen = new Set<string>()
+  return media.filter((item) => {
+    const key = item.isDuplicateOf ?? item.filename
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+function makeGroup(
   id: string,
   title: string,
+  discipline: PortfolioDiscipline,
   media: PortfolioMedia[],
-  options: { theme?: string; initialVisibleCount?: number; presentation?: MediaPresentation } = {},
-): PortfolioMediaGroup | undefined => {
-  const groupMedia = media.map((item) => withPresentation(item, options.presentation))
+  options: { presentation?: MediaPresentation; initialVisibleCount?: number } = {},
+): PortfolioMediaGroup | undefined {
+  const groupMedia = unique(withPresentation(media, options.presentation))
   if (!groupMedia.length) return undefined
   return {
     id,
     title,
-    theme: options.theme,
+    discipline,
     initialVisibleCount: options.initialVisibleCount ?? 4,
     media: groupMedia,
   }
 }
 
-const byName = (media: PortfolioMedia[], patterns: Array<string | RegExp>) => media.filter((item) =>
-  patterns.some((pattern) => typeof pattern === 'string' ? item.filename.includes(pattern) : pattern.test(item.filename)))
-
-const notInGroups = (media: PortfolioMedia[], groups: Array<PortfolioMediaGroup | undefined>) => {
-  const used = new Set(groups.flatMap((group) => group?.media.map((item) => item.filename) ?? []))
-  return media.filter((item) => !used.has(item.filename))
+function makeSet(
+  id: string,
+  title: string,
+  mediaGroups: Array<PortfolioMediaGroup | undefined>,
+  creativeDirection?: CreativeDirection,
+): PortfolioCreativeSet | undefined {
+  const groups = mediaGroups.filter(Boolean) as PortfolioMediaGroup[]
+  if (!groups.length) return undefined
+  return {
+    id,
+    title,
+    disciplines: Array.from(new Set(groups.map((group) => group.discipline))),
+    creativeDirection,
+    mediaGroups: groups,
+  }
 }
 
-const groupedByAspect = (media: PortfolioMedia[], title: string) => makeGroup(slug(title), title, media)
-
-function buildCharliiGroups(media: PortfolioMedia[]): PortfolioMediaGroup[] {
-  const pink = byName(media, [
-    /TOF_ad/i,
-    /BOF_ad/i,
-    /MOF_ad-2/i,
-    /TOF_video/i,
-    /MOF_video_2/i,
-    /BOF_vid/i,
-  ])
-  const brown = byName(media, [
-    /MOF_ad-1/i,
-    /MOF_Mega Marylin Set/i,
-  ])
+function buildCharlii(media: PortfolioMedia[]) {
+  const pink = byName(media, [/TOF_ad/i, /BOF_ad/i, /MOF_ad-2/i, /TOF_video/i, /MOF_video_2/i, /BOF_vid/i])
+  const brown = byName(media, [/MOF_ad-1/i, /MOF_Mega Marylin Set/i])
   return [
-    makeGroup('pink-campaign', 'PINK CAMPAIGN', pink, { theme: 'pink' }),
-    makeGroup('brown-campaign', 'BROWN CAMPAIGN', brown, { theme: 'brown' }),
-  ].filter(Boolean) as PortfolioMediaGroup[]
+    makeSet('pink-campaign', 'Pink Campaign', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', pink.filter((item) => item.type === 'image')),
+      makeGroup('videos', 'VIDEOS', 'video', pink.filter((item) => item.type === 'video')),
+    ], {
+      colors: ['#f7dada', '#d27b88', '#fff3ef', '#ffffff', '#2a1716'],
+      typography: 'High-contrast serif with compact social ad support text',
+      visualStyle: 'Soft blush beauty scenes, salon-at-home messaging and product-led social placements.',
+      messaging: ['Salon Results at home', 'No heat damage'],
+    }),
+    makeSet('brown-campaign', 'Brown Campaign', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', brown.filter((item) => item.type === 'image')),
+      makeGroup('videos', 'VIDEOS', 'video', brown.filter((item) => item.type === 'video')),
+    ], {
+      colors: ['#2a1716', '#7a4b2d', '#b88a58', '#f2d3ad', '#ffffff'],
+      typography: 'Premium serif display with product-set support text',
+      visualStyle: 'Brown-and-gold Mega Marilyn visuals with pearls, telephone styling and darker product scenes.',
+      messaging: ['Mega Marilyn Stylist Set'],
+    }),
+  ].filter(Boolean) as PortfolioCreativeSet[]
 }
 
-function buildPowertecGroups(media: PortfolioMedia[]): PortfolioMediaGroup[] {
+function buildPowertec(media: PortfolioMedia[]) {
   const magazine = byName(media, ['Magazine ads.jpg'])
-  const packaging = byName(media, [/packaging/i])
-  const social = byName(media, ['socials.jpg'])
-  const videos = media.filter((item) => item.type === 'video')
+  const packaging = byName(media, ['Powertec/packaging (1).jpg', 'Powertec/packaging.jpg'])
+  const watchAiPackaging = byName(media, ['WatchAi packaging.jpg'])
+  const staticSocial = byName(media, ['socials.jpg'])
+  const outbackVideos = byName(media, [/Outback Marine_Facebook Sales Campaign/i])
+  const watchAiVideos = byName(media, [/WatchAi_Wholesaler Campaign/i, /watchai-wholesaler-campaign/i])
+  const powertecVideos = byName(media, [/Powertec_Traffic/i, /powertec-awarness/i, /powertec-sales/i])
+
   return [
-    makeGroup('magazine-ads', 'MAGAZINE ADS', magazine, { presentation: 'full-artwork' }),
-    makeGroup('packaging', 'PACKAGING', packaging, { presentation: 'full-artwork' }),
-    makeGroup('social-ads', 'SOCIAL ADS', social, { presentation: 'full-artwork' }),
-    makeGroup('videos', 'VIDEOS', videos, { theme: 'videos' }),
-  ].filter(Boolean) as PortfolioMediaGroup[]
+    makeSet('r41-magazine-campaign', 'Powertec R41 Magazine Campaign', [
+      makeGroup('magazine-ads', 'MAGAZINE ADS', 'magazine-ads', magazine, { presentation: 'full-artwork' }),
+    ], {
+      colors: ['#06090d', '#004b8d', '#f4b000', '#ffffff'],
+      typography: 'Industrial product-campaign sans serif',
+      visualStyle: 'Wide magazine campaign board for R41 product advertising.',
+      messaging: ['Powertec R41'],
+    }),
+    makeSet('powertec-packaging', 'Powertec Packaging', [
+      makeGroup('packaging', 'PACKAGING', 'packaging', packaging, { presentation: 'full-artwork' }),
+    ], {
+      colors: ['#071120', '#005aa6', '#f4b000', '#ffffff'],
+      typography: 'Technical packaging sans serif',
+      visualStyle: 'Wide packaging boards with product pack variations and technical hierarchy.',
+      messaging: ['Powertec packaging'],
+    }),
+    makeSet('watchai-branding-packaging', 'WatchAI Branding and Packaging', [
+      makeGroup('branding', 'BRANDING / PACKAGING', 'branding', watchAiPackaging, { presentation: 'full-artwork' }),
+      makeGroup('videos', 'VIDEOS', 'video', watchAiVideos),
+    ], {
+      colors: ['#101820', '#00a3c7', '#ffffff', '#94a3ad'],
+      typography: 'Clean technology product sans serif',
+      visualStyle: 'WatchAI product packaging and wholesaler campaign video assets.',
+      messaging: ['WatchAi'],
+    }),
+    makeSet('outback-marine-campaign', 'Outback Marine Campaign', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', staticSocial, { presentation: 'full-artwork' }),
+      makeGroup('videos', 'VIDEOS', 'video', outbackVideos),
+    ], {
+      colors: ['#0d1f32', '#f4b000', '#ffffff', '#477b9a'],
+      typography: 'Bold campaign sans serif over marine imagery',
+      visualStyle: 'Marine campaign creative across static social and video placements.',
+      messaging: ['Outback Marine'],
+    }),
+    makeSet('powertec-video-campaigns', 'Powertec Video Campaigns', [
+      makeGroup('videos', 'VIDEOS', 'video', powertecVideos),
+    ], {
+      colors: ['#101820', '#005aa6', '#f4b000', '#ffffff'],
+      typography: 'Product campaign sans serif captions and overlays',
+      visualStyle: 'Powertec awareness, traffic and sales video campaign files.',
+      messaging: ['Powertec traffic campaign', 'Powertec awareness campaign', 'Powertec sales campaign'],
+    }),
+  ].filter(Boolean) as PortfolioCreativeSet[]
 }
 
-function buildProjectGroups(projectId: string, folder: string, media: PortfolioMedia[]): PortfolioMediaGroup[] {
-  if (projectId === 'charlie-hair-rollers') return buildCharliiGroups(media)
-  if (projectId === 'powertec') return buildPowertecGroups(media)
-  if (projectId === 'hardtuned') return [makeGroup('edm', 'EDM', media, { presentation: 'full-artwork' })].filter(Boolean) as PortfolioMediaGroup[]
+function buildAustralis(media: PortfolioMedia[]) {
+  const orange = byName(media, [/Australis Music Group \([1-3]\)\.jpg/i])
+  const eventIdentity = byName(media, [/Australis Music Group \(4\)\.jpg/i, /Australis Music Group\.jpg/i])
+  return [
+    makeSet('orange-amplifiers-brand-guide', 'Orange Amplifiers Brand Guide', [
+      makeGroup('branding', 'BRANDING', 'branding', orange, { presentation: 'full-artwork' }),
+    ], {
+      colors: ['#f36f21', '#ffffff', '#171313', '#f6f0e7'],
+      typography: 'Editorial serif paired with product-table typography',
+      visualStyle: 'Orange Amplifiers guide layouts and product information spreads.',
+      messaging: ['Orange Amplifiers'],
+    }),
+    makeSet('tac-event-identity', 'TAC / Artist Centre Event Identity', [
+      makeGroup('branding', 'BRANDING', 'branding', eventIdentity, { presentation: 'full-artwork' }),
+    ], {
+      colors: ['#15110f', '#c69a52', '#ffffff', '#f0e6d7'],
+      typography: 'Event identity typography with premium contrast',
+      visualStyle: 'Event-led identity boards separated from the Orange Amplifiers system.',
+      messaging: ['TAC event'],
+    }),
+  ].filter(Boolean) as PortfolioCreativeSet[]
+}
 
-  const videos = media.filter((item) => item.type === 'video')
+function buildUN(media: PortfolioMedia[]) {
+  return media.map((item, index) => makeSet(`ad-concept-${index + 1}`, `Ad Concept ${String(index + 1).padStart(2, '0')}`, [
+    makeGroup('magazine-ads', 'MAGAZINE ADS', 'magazine-ads', [item], { presentation: 'portrait' }),
+  ], {
+    typography: 'Clear public-information sans serif',
+    visualStyle: index === 0
+      ? 'COVID-19 title treatment with a graphic hand symbol.'
+      : index === 1
+        ? 'Institutional poster layout with a strong central message.'
+        : 'Portrait public-health campaign artwork with direct typographic hierarchy.',
+    messaging: ['United Nations Covid-19 Campaign'],
+  })).filter(Boolean) as PortfolioCreativeSet[]
+}
+
+function buildGeneric(projectId: string, folder: string, title: string, media: PortfolioMedia[]) {
   const images = media.filter((item) => item.type === 'image')
-  const primaryGroupTitle =
-    folder === 'AUDI' || folder === 'UN' ? 'MAGAZINE ADS'
-      : folder === 'Real Estate' ? 'BROCHURES'
-        : folder === 'Australis Music Group' ? 'BRANDING'
-          : folder === 'Elemental Studio' || folder === 'FaceitGraphix' ? 'BRANDING'
-            : folder === 'Kean Construction group' || folder === 'The Brooklyn_Wine & Tapas Bar' ? 'ORGANIC SOCIAL'
-              : 'SOCIAL ADS'
-  const primary = makeGroup(slug(primaryGroupTitle), primaryGroupTitle, images, {
-    presentation: ['AUDI', 'UN', 'Real Estate', 'Australis Music Group'].includes(folder) ? 'full-artwork' : undefined,
-  })
-  const videoGroup = makeGroup('videos', 'VIDEOS', videos, { theme: 'videos' })
-  const remaining = notInGroups(media, [primary, videoGroup])
-  return [primary, videoGroup, groupedByAspect(remaining, 'MORE WORK')].filter(Boolean) as PortfolioMediaGroup[]
+  const videos = media.filter((item) => item.type === 'video')
+  const fullArtworkFolders = ['AUDI', 'Hardtuned', 'Real Estate']
+  const discipline: PortfolioDiscipline =
+    folder === 'AUDI' ? 'magazine-ads'
+      : folder === 'Hardtuned' ? 'edm'
+        : folder === 'Real Estate' ? 'brochure'
+          : folder === 'Elemental Studio' || folder === 'FaceitGraphix' ? 'branding'
+            : folder === 'Kean Construction group' || folder === 'The Brooklyn_Wine & Tapas Bar' ? 'organic-social'
+              : 'social-ads'
+  const label: Record<PortfolioDiscipline, string> = {
+    'social-ads': 'SOCIAL ADS',
+    'organic-social': 'ORGANIC SOCIAL',
+    'magazine-ads': 'MAGAZINE ADS',
+    branding: 'BRANDING',
+    video: 'VIDEOS',
+    packaging: 'PACKAGING',
+    edm: 'EDM',
+    brochure: 'BROCHURES',
+  }
+  const colors: Record<string, string[]> = {
+    AUDI: ['#0b0b0b', '#6d7070', '#cfd4d2', '#ffffff', '#e43d64'],
+    Hardtuned: ['#0f0f0f', '#f7f7f7', '#d9d0c8', '#8a817d'],
+    'Elemental Studio': ['#111111', '#f5f0e8', '#d4c3aa', '#ffffff'],
+    FaceitGraphix: ['#101010', '#f1f1f1', '#c9c9c9', '#e53c34'],
+    'Real Estate': ['#101010', '#ffffff', '#d8d2c7', '#8f8174'],
+  }
+  const visual: Record<string, string> = {
+    AUDI: 'Monochrome automotive poster treatment with a focused product reveal.',
+    Hardtuned: 'Wide EDM artwork with fashion product imagery and editorial layout structure.',
+    'Elemental Studio': 'Quiet identity system with logo and business-card presentation.',
+    FaceitGraphix: 'Branding system applied across vehicle-wrap artwork.',
+    'Real Estate': 'Landscape property brochure layouts with image-led spreads.',
+  }
+  return [
+    makeSet(slug(title), title, [
+      makeGroup(slug(label[discipline]), label[discipline], discipline, images, {
+        presentation: fullArtworkFolders.includes(folder) ? 'full-artwork' : undefined,
+      }),
+      makeGroup('videos', 'VIDEOS', 'video', videos),
+    ], {
+      colors: colors[folder],
+      typography: discipline === 'branding' ? 'Identity-focused type treatment' : discipline === 'organic-social' ? 'Social post sans serif typography' : undefined,
+      visualStyle: visual[folder],
+      messaging: [title],
+    }),
+  ].filter(Boolean) as PortfolioCreativeSet[]
+}
+
+function buildSycamore(media: PortfolioMedia[]) {
+  const organic = byName(media, [/Organic_April/i])
+  const videos = media.filter((item) => item.type === 'video')
+  const socialAds = media.filter((item) => item.type === 'image' && !organic.includes(item))
+  return [
+    makeSet('sycamore-social-ads', 'Sycamore Social Ads', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', socialAds),
+    ], {
+      colors: ['#502c83', '#f7b733', '#ffffff', '#58a6d6'],
+      typography: 'Friendly sans serif campaign typography',
+      visualStyle: 'School campaign sets across square, portrait and landscape ad ratios.',
+      messaging: ['This is Sycamore'],
+    }),
+    makeSet('sycamore-organic-social', 'Sycamore Organic Social', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', organic),
+    ]),
+    makeSet('sycamore-video', 'Sycamore Video', [
+      makeGroup('videos', 'VIDEOS', 'video', videos),
+    ], {
+      messaging: ['This is Sycamore'],
+    }),
+  ].filter(Boolean) as PortfolioCreativeSet[]
+}
+
+function buildVetner(media: PortfolioMedia[]) {
+  const organic = byName(media, [/organic-posts/i])
+  const socialAds = media.filter((item) => !organic.includes(item))
+  return [
+    makeSet('vetner-social-ads', 'Vetner Social Ads', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', socialAds),
+    ], {
+      colors: ['#0f1b25', '#f4a52c', '#ffffff', '#b9c5cf'],
+      typography: 'Bold utility-focused sans serif social typography',
+      visualStyle: 'Product and trade campaign assets across landscape, square and portrait ratios.',
+      messaging: ['Social ads'],
+    }),
+    makeSet('vetner-organic-social', 'Vetner Organic Social', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', organic),
+    ]),
+  ].filter(Boolean) as PortfolioCreativeSet[]
+}
+
+function buildSpinal(media: PortfolioMedia[]) {
+  const organic = byName(media, [/TOF_back2work/i])
+  const socialAds = media.filter((item) => !organic.includes(item))
+  return [
+    makeSet('spinal-social-ads', 'Spinal Social Ads', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', socialAds),
+    ], {
+      colors: ['#18365f', '#f05a28', '#ffffff', '#dce6ee'],
+      typography: 'Accessible sans serif campaign typography',
+      visualStyle: 'Social campaign assets across square, portrait and landscape placements.',
+      messaging: ['Personal Support', 'Back2Work'],
+    }),
+    makeSet('spinal-organic-social', 'Spinal Organic Social', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', organic),
+    ]),
+  ].filter(Boolean) as PortfolioCreativeSet[]
+}
+
+function buildCreativeSets(projectId: string, folder: string, title: string, media: PortfolioMedia[]) {
+  if (projectId === 'charlie-hair-rollers') return buildCharlii(media)
+  if (projectId === 'powertec') return buildPowertec(media)
+  if (folder === 'Australis Music Group') return buildAustralis(media)
+  if (folder === 'UN') return buildUN(media)
+  if (folder === 'The Sycamore school') return buildSycamore(media)
+  if (folder === 'Vetner') return buildVetner(media)
+  if (folder === 'Spinal life') return buildSpinal(media)
+  return buildGeneric(projectId, folder, title, media)
 }
 
 export const portfolioProjects: PortfolioProject[] = mediaManifest
   .map((group) => {
-    const meta = projectMeta[group.folder] ?? {
-      client: group.folder,
-      title: group.folder,
-      disciplines: ['Additional work'],
-      categories: ['Branding'],
-      order: 999,
-    }
+    const meta = projectMeta[group.folder] ?? { client: group.folder, title: group.folder, order: 999 }
     const id = slug(group.folder)
-    const images: PortfolioMedia[] = group.images.map((image, index) => ({
+    const images: PortfolioMedia[] = group.images.map((image) => ({
       ...image,
+      id: slug(image.filename),
       type: 'image',
       alt: altFrom(meta.title, image.label),
-      role: index === 0 ? 'hero' : 'supporting',
-      presentation: defaultPresentation({ ...image, type: 'image', alt: '' }),
+      presentation: defaultPresentation(image),
     }))
     const videos: PortfolioMedia[] = group.videos.map((video, index) => ({
       ...video,
+      id: slug(video.filename),
       type: 'video',
       alt: `${meta.title} portfolio video: ${videoTitle(video.filename, video.label)}`,
       poster: videoPoster(id, index),
-      role: 'detail',
       presentation: 'wide',
     }))
     const media = [...images, ...videos]
-
     return {
       id,
       folder: group.folder,
       client: meta.client,
       title: meta.title,
-      disciplines: meta.disciplines,
-      categories: meta.categories,
-      creativeDirection: meta.creativeDirection,
       media,
-      groups: buildProjectGroups(id, group.folder, media),
-      featured: meta.featured,
-      displayTheme: meta.displayTheme,
+      creativeSets: buildCreativeSets(id, group.folder, meta.title, media),
       order: meta.order,
     }
   })
@@ -414,16 +431,9 @@ export const portfolioProjects: PortfolioProject[] = mediaManifest
   .map(({ order: _order, ...project }) => project)
 
 export const clients = portfolioProjects.map((project) => project.client)
-export const disciplines = Array.from(new Set(portfolioProjects.flatMap((project) => project.disciplines))).sort()
-
 export const findProject = (id: string) => portfolioProjects.find((project) => project.id === id)
-
 export const allVideos = portfolioProjects.flatMap((project) => project.media
   .filter((media) => media.type === 'video')
-  .map((video) => ({
-    ...video,
-    displayTitle: videoTitle(video.filename, video.label),
-    projectTitle: project.title,
-  })))
+  .map((video) => ({ ...video, displayTitle: videoTitle(video.filename, video.label), projectTitle: project.title })))
 
 export { mediaAudit }
