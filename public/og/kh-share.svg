@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Katty Hozavsky</title>
+  <desc id="desc">KH. Katty Hozavsky. Senior Designer and Social Media Creator.</desc>
+  <rect width="1200" height="630" fill="#fbf3f0"/>
+  <path d="M0 0h1200v630H0z" fill="#fbf3f0"/>
+  <g stroke="#ecd1cf" stroke-width="1" opacity=".75">
+    <path d="M96 92h1008M96 538h1008"/>
+    <path d="M96 92v446M1104 92v446"/>
+  </g>
+  <text x="120" y="207" fill="#211414" font-family="Georgia, 'Times New Roman', serif" font-size="142" font-weight="700" letter-spacing="-10">KH</text>
+  <text x="120" y="327" fill="#211414" font-family="Georgia, 'Times New Roman', serif" font-size="58" letter-spacing="-1.5">Katty Hozavsky</text>
+  <text x="124" y="382" fill="#c86d7a" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="800" letter-spacing="4">SENIOR DESIGNER &amp; SOCIAL MEDIA CREATOR</text>
+</svg>

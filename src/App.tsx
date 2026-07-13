@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
-import { categoryFilters, portfolioProjects, videoTitle, type PortfolioMedia, type PortfolioProject } from './data/projects'
-
-const Arrow = () => <span aria-hidden="true">→</span>
+import {
+  categoryFilters,
+  portfolioProjects,
+  videoTitle,
+  type CreativeDirection,
+  type PortfolioMedia,
+  type PortfolioMediaGroup,
+  type PortfolioProject,
+} from './data/projects'
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -19,12 +25,7 @@ function Header() {
 function Hero() {
   return <section className="hero" id="top">
     <p className="eyebrow">Katty Hozavsky Senior Designer &amp; Social Media Creator</p>
-    <div className="hero-grid">
-      <h1>Selected Works</h1>
-      <div className="hero-note">
-        <a href="#work">View work <Arrow /></a>
-      </div>
-    </div>
+    <h1>Selected Works</h1>
   </section>
 }
 
@@ -62,19 +63,16 @@ function mediaKey(media: PortfolioMedia) {
 }
 
 function mediaClasses(media: PortfolioMedia, className: string) {
-  return ['media-frame', `media-${media.type}`, `media-${media.aspect ?? 'wide'}`, className].filter(Boolean).join(' ')
+  return ['media-frame', `media-${media.type}`, `media-${media.presentation ?? media.aspect ?? 'wide'}`, className].filter(Boolean).join(' ')
 }
 
-function MediaFrame({ media, className = '', priority = false, preview = false }: { media?: PortfolioMedia; className?: string; priority?: boolean; preview?: boolean }) {
+function MediaFrame({ media, className = '', priority = false }: { media?: PortfolioMedia; className?: string; priority?: boolean }) {
   if (!media) return null
   if (media.type === 'video') {
     return <figure className={mediaClasses(media, className)}>
       <video
         src={media.src}
         poster={media.poster}
-        autoPlay={preview}
-        muted={preview}
-        loop={preview}
         controls
         playsInline
         preload="metadata"
@@ -89,42 +87,58 @@ function MediaFrame({ media, className = '', priority = false, preview = false }
   </figure>
 }
 
-function dedupeVisibleMedia(project: PortfolioProject, media: PortfolioMedia[]) {
-  if (project.id === 'powertec') {
-    const visibleVideos = [
-      'Powertec_Traffic Facebook Campaign.mp4',
-      'Outback Marine_Facebook Sales Campaign.mp4',
-      'WatchAi_Wholesaler Campaign.mp4',
-    ]
-    return media.filter((item) => item.type === 'image' || visibleVideos.some((name) => item.filename.endsWith(name)))
-  }
+function CreativeDirectionPanel({ direction }: { direction?: CreativeDirection }) {
+  if (!direction) return null
 
-  return media
+  return <aside className="creative-panel" aria-label="Creative direction">
+    <p className="eyebrow">Creative Direction</p>
+    {direction.colors?.length && <div className="direction-block">
+      <h3>Color palette</h3>
+      <div className="swatches" aria-label="Project colour palette">
+        {direction.colors.map((color) => <span key={color} style={{ background: color }} title={color} />)}
+      </div>
+    </div>}
+    {direction.typography && <div className="direction-block">
+      <h3>Typography</h3>
+      <p>{direction.typography}</p>
+    </div>}
+    {direction.visualStyle && <div className="direction-block">
+      <h3>Visual style</h3>
+      <p>{direction.visualStyle}</p>
+    </div>}
+    {direction.messaging?.length && <div className="direction-block">
+      <h3>Project / Messaging</h3>
+      <ul>
+        {direction.messaging.map((item) => <li key={item}>{item}</li>)}
+      </ul>
+    </div>}
+  </aside>
 }
 
-function ProjectMediaRun({ project, skip = [] }: { project: PortfolioProject; skip?: string[] }) {
-  const skipSet = new Set(skip)
-  const media = dedupeVisibleMedia(project, project.media.filter((item) => !skipSet.has(mediaKey(item))))
-  if (!media.length) return null
+function MediaGroup({ projectId, group }: { projectId: string; group: PortfolioMediaGroup }) {
+  const [expanded, setExpanded] = useState(false)
+  const initialCount = group.initialVisibleCount ?? 4
+  const canExpand = group.media.length > initialCount
+  const visibleMedia = expanded || !canExpand ? group.media : group.media.slice(0, initialCount)
 
-  return <div className="media-run" aria-label={`${project.title} media`}>
-    {media.map((item) => <MediaFrame key={item.src} media={item} className="run-item" />)}
-  </div>
+  return <section className={`media-group theme-${group.theme ?? 'default'}`} aria-labelledby={`${projectId}-${group.id}-title`}>
+    {group.title && <h3 className="group-title" id={`${projectId}-${group.id}-title`}>{group.title}</h3>}
+    <div className="media-grid">
+      {visibleMedia.map((item) => <MediaFrame key={item.src} media={item} />)}
+    </div>
+    {canExpand && <button className="view-more" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
+      {expanded ? 'View Less' : 'View More'}
+    </button>}
+  </section>
 }
 
-function featuredVideo(project: PortfolioProject) {
-  if (project.id === 'powertec') {
-    return project.media.find((media) => media.filename.endsWith('Powertec_Traffic Facebook Campaign.mp4'))
-  }
-  return project.media.find((media) => media.type === 'video')
+function firstHeroImage(project: PortfolioProject) {
+  const firstGroupImage = project.groups.flatMap((group) => group.media).find((media) => media.type === 'image')
+  return firstGroupImage ?? project.media.find((media) => media.type === 'image') ?? project.media[0]
 }
 
 function ProjectShowcase({ project, index }: { project: PortfolioProject; index: number }) {
-  const wideImages = project.media.filter((media) => media.type === 'image' && media.aspect === 'wide')
-  const hero = wideImages[0] ?? project.media.find((media) => media.type === 'image') ?? project.media[0]
-  const support = project.media.find((media) => media !== hero && media.type === 'image' && media.aspect !== 'wide') ?? wideImages[1] ?? project.media.find((media) => media !== hero)
-  const motion = featuredVideo(project)
-  const skip = [hero, support, motion].filter(Boolean).map((media) => mediaKey(media as PortfolioMedia))
+  const hero = firstHeroImage(project)
   const tone = `tone-${index % 4}`
 
   return <article id={project.id} className={`project-showcase ${tone}`} aria-labelledby={`${project.id}-title`}>
@@ -132,36 +146,32 @@ function ProjectShowcase({ project, index }: { project: PortfolioProject; index:
       <div className="project-copy">
         <p className="eyebrow">{project.client}</p>
         <h2 id={`${project.id}-title`}>{project.title}</h2>
+        <CreativeDirectionPanel direction={project.creativeDirection} />
       </div>
       <div className="project-media-composition">
         <MediaFrame media={hero} className="project-primary" priority={index < 2} />
-        <MediaFrame media={support} className="project-support" />
-        {motion && <MediaFrame media={motion} className="project-motion" preview={project.id === 'powertec'} />}
       </div>
     </div>
-    <ProjectMediaRun project={project} skip={skip} />
+    <div className="project-groups">
+      {project.groups.map((group) => <MediaGroup key={group.id} projectId={project.id} group={group} />)}
+    </div>
   </article>
 }
 
-function StageLabel({ number, title }: { number: string; title: string }) {
+function StageLabel({ number, title, note }: { number: string; title: string; note: string }) {
   return <div className="stage-label">
     <span>{number}</span>
-    <strong>{title}</strong>
+    <div>
+      <strong>{title}</strong>
+      <small>{note}</small>
+    </div>
   </div>
 }
 
 function CharliiShowcase({ project }: { project: PortfolioProject }) {
   const hero = selectMedia(project, 'TOF_ad-2_landscape')
-  const tofSquare = selectMedia(project, 'TOF_ad_2.jpg')
-  const tofDetail = selectMedia(project, 'TOF_ad_3.jpg')
-  const tofPortrait = selectMedia(project, 'TOF_ad-3_long')
-  const mofWide = selectMedia(project, 'MOF_ad-1_landscape')
-  const mofSquare = selectMedia(project, 'MOF_ad-2.jpg')
-  const mofPortrait = selectMedia(project, 'MOF_ad-1_long')
-  const bofWide = selectMedia(project, 'BOF_ad-1_landscape')
-  const bofSquare = selectMedia(project, 'BOF_ad-2.jpg')
-  const bofPortrait = selectMedia(project, 'BOF_ad-1_long')
-  const videos = project.media.filter((media) => media.type === 'video')
+  const pink = project.groups.find((group) => group.id === 'pink-campaign')
+  const brown = project.groups.find((group) => group.id === 'brown-campaign')
 
   return <article id={project.id} className="charlii-showcase" aria-labelledby="charlii-title">
     <div className="charlii-hero">
@@ -169,6 +179,7 @@ function CharliiShowcase({ project }: { project: PortfolioProject }) {
         <p className="eyebrow">Social Media Video Campaigns</p>
         <h2 id="charlii-title">{project.title}</h2>
         <p className="subtitle">Full funnel social media campaign</p>
+        <CreativeDirectionPanel direction={project.creativeDirection} />
       </div>
       <div className="hero-composition">
         <MediaFrame media={hero} className="hero-card" priority />
@@ -176,56 +187,15 @@ function CharliiShowcase({ project }: { project: PortfolioProject }) {
     </div>
 
     <div className="funnel-strip" aria-label="Campaign structure">
-      <StageLabel number="1" title="TOF" />
-      <StageLabel number="2" title="MOF" />
-      <StageLabel number="3" title="BOF" />
+      <StageLabel number="1" title="TOF - Awareness" note="Introduce. Inspire. Build Interest." />
+      <StageLabel number="2" title="MOF - Sales" note="Educate. Showcase. Drive Consideration." />
+      <StageLabel number="3" title="BOF - Remarketing" note="Re-engage. Reinforce. Convert." />
     </div>
 
-    <section className="stage-composition stage-one" aria-labelledby="tof-title">
-      <aside>
-        <span>1</span>
-        <h3 id="tof-title">TOF</h3>
-      </aside>
-      <MediaFrame media={tofSquare} className="span-2" />
-      <MediaFrame media={tofDetail} />
-      <MediaFrame media={tofPortrait} className="portrait-card" />
-    </section>
-
-    <section className="stage-composition stage-two" aria-labelledby="mof-title">
-      <aside>
-        <span>2</span>
-        <h3 id="mof-title">MOF</h3>
-      </aside>
-      <MediaFrame media={mofWide} className="span-2 dark-card" />
-      <MediaFrame media={mofSquare} />
-      <MediaFrame media={mofPortrait} className="portrait-card" />
-    </section>
-
-    <section className="stage-composition stage-three" aria-labelledby="bof-title">
-      <aside>
-        <span>3</span>
-        <h3 id="bof-title">BOF</h3>
-      </aside>
-      <MediaFrame media={bofWide} className="span-2" />
-      <MediaFrame media={bofSquare} />
-      <MediaFrame media={bofPortrait} className="portrait-card" />
-    </section>
-
-    <section className="motion-strip" aria-labelledby="motion-title">
-      <div>
-        <p className="eyebrow">Video</p>
-        <h3 id="motion-title">Campaign motion</h3>
-      </div>
-      <div className="video-rail">
-        {videos.map((video) => <figure className="video-card" key={video.src}>
-          <video src={video.src} poster={video.poster} controls playsInline preload="metadata" aria-label={video.alt} />
-          <figcaption>{videoTitle(video.filename, video.label)}</figcaption>
-        </figure>)}
-      </div>
-    </section>
-    <ProjectMediaRun project={project} skip={[
-      hero, tofSquare, tofDetail, tofPortrait, mofWide, mofSquare, mofPortrait, bofWide, bofSquare, bofPortrait, ...videos,
-    ].filter(Boolean).map((media) => mediaKey(media as PortfolioMedia))} />
+    <div className="project-groups">
+      {pink && <MediaGroup projectId={project.id} group={pink} />}
+      {brown && <MediaGroup projectId={project.id} group={brown} />}
+    </div>
   </article>
 }
 
