@@ -454,7 +454,7 @@ export const portfolioProjects: PortfolioProject[] = mediaManifest
     }))
     const videos: PortfolioMedia[] = group.videos.map((video, index) => ({
       ...video,
-      id: slug(video.filename),
+      id: `${slug(video.filename)}-${index + 1}`,
       type: 'video',
       alt: `${meta.title} portfolio video: ${videoTitle(video.filename, video.label)}`,
       poster: videoPoster(id, index),

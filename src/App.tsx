@@ -42,26 +42,19 @@ function CategoryButton({ active, children, onClick }: { active: boolean; childr
 }
 
 function PortfolioExplorer() {
-  const initialHash = typeof window === 'undefined' ? '' : window.location.hash.slice(1)
-  const initialFilter = filterFromHash(initialHash)
-  const initialClient = portfolioProjects.find((project) => project.id === initialHash)?.client ?? 'Charlii'
-  const [activeFilter, setActiveFilter] = useState<CategoryFilter>(initialFilter)
-  const [selectedClient, setSelectedClient] = useState(initialClient)
-  const [selectorOpen, setSelectorOpen] = useState(initialFilter === 'Projects' && initialClient === 'Charlii')
   const [motionReady, setMotionReady] = useState(false)
 
-  const selectedProject = portfolioProjects.find((project) => project.client === selectedClient) ?? portfolioProjects[0]!
-  const activeDiscipline = filterDisciplines[activeFilter]
-
-  const filteredProjects = useMemo(() => {
-    if (!activeDiscipline) return selectedProject ? [selectedProject] : []
-    return portfolioProjects
-      .map((project) => filterProjectByDiscipline(project, activeDiscipline))
-      .filter((project): project is PortfolioProject => Boolean(project))
-  }, [activeDiscipline, selectedProject])
-  const filteredWorks = useMemo(() => filteredProjects.flatMap((project) =>
-    project.creativeSets.map((set) => ({ project, set }))), [filteredProjects])
-  const showProjectsView = portfolioConfig.showProjectsNavigation && activeFilter === 'Projects'
+  const categorySections = useMemo(() => categoryFilters
+    .map((category) => {
+      const discipline = filterDisciplines[category]
+      if (!discipline) return undefined
+      const projects = portfolioProjects
+        .map((project) => filterProjectByDiscipline(project, discipline))
+        .filter((project): project is PortfolioProject => Boolean(project))
+      const works = projects.flatMap((project) => project.creativeSets.map((set) => ({ project, set })))
+      return { category, works }
+    })
+    .filter((section): section is { category: CategoryFilter; works: Array<{ project: PortfolioProject; set: PortfolioCreativeSet }> } => Boolean(section?.works.length)), [])
 
   useEffect(() => {
     const items = document.querySelectorAll('.reveal-on-scroll')
@@ -82,34 +75,76 @@ function PortfolioExplorer() {
 
     items.forEach((item) => observer.observe(item))
     return () => observer.disconnect()
-  }, [activeFilter, filteredWorks])
+  }, [categorySections])
 
-  return <section className={motionReady ? 'work section motion-ready' : 'work section'} id="work">
-    <nav className="portfolio-nav" aria-label="Portfolio categories">
-      {categoryFilters.map((category) => <CategoryButton
-        key={category}
-        active={activeFilter === category}
-        onClick={() => {
-          setActiveFilter(category)
-          setSelectorOpen(category === 'Projects')
-        }}
-      >{category}</CategoryButton>)}
-    </nav>
+  return <section className={motionReady ? 'work section scroll-work motion-ready' : 'work section scroll-work'} id="work">
+    <div className="scroll-experience">
+      <aside className="scroll-menu" aria-label="Scroll categories">
+        <p>Scroll Menu</p>
+        <nav>
+          {categorySections.map(({ category }) => <a key={category} href={`#stage-${slugLabel(category)}`}>{category}</a>)}
+        </nav>
+      </aside>
+      <div className="experience-flow">
+        <section className="paper-origin reveal-on-scroll" aria-label="Portfolio opening concept">
+          <div className="paper-ball" aria-hidden="true"><span /></div>
+          <div>
+            <p className="eyebrow">From concept to channel</p>
+            <h2>A crumpled idea opens into print, moves through social, and lands in motion.</h2>
+          </div>
+        </section>
+        {categorySections.map(({ category, works }, index) => <CategoryStage
+          key={category}
+          category={category}
+          works={works}
+          nextCategory={categorySections[index + 1]?.category}
+        />)}
+      </div>
+    </div>
+  </section>
+}
 
-    {showProjectsView && <ClientSelector
-      open={selectorOpen}
-      selectedClient={selectedClient}
-      onToggle={() => setSelectorOpen((value) => !value)}
-      onSelect={(client) => {
-        setSelectedClient(client)
-        setSelectorOpen(false)
-      }}
-    />}
+function categoryStageCopy(category: CategoryFilter) {
+  const copy: Record<string, { title: string; description: string }> = {
+    'Social Ads': {
+      title: 'Phone-first campaign moments',
+      description: 'Paid social work sits inside device-led frames, giving campaign assets the context they were designed for.',
+    },
+    'Organic Social': {
+      title: 'Organic social systems',
+      description: 'Feed work is treated as a social environment rather than isolated thumbnails.',
+    },
+    'Magazine Ads': {
+      title: 'Paper opened flat',
+      description: 'Print campaigns live on a creased editorial sheet with room to move through each ad.',
+    },
+    Branding: {
+      title: 'Brand systems and surfaces',
+      description: 'Identity work stays clean and tactile, like boards laid out on a studio table.',
+    },
+    Video: {
+      title: 'Motion on screen',
+      description: 'Video work moves into a darker player space with controls kept visible and usable.',
+    },
+  }
 
-    <div className="portfolio-stack">
-      {showProjectsView
-        ? filteredProjects.map((project) => <ProjectShowcase key={`${activeFilter}-${project.id}`} project={project} mode="project" />)
-        : filteredWorks.map(({ project, set }) => <WorkShowcase key={`${activeFilter}-${project.id}-${set.id}`} project={project} set={set} />)}
+  return copy[category] ?? { title: category, description: '' }
+}
+
+function CategoryStage({ category, works, nextCategory }: { category: CategoryFilter; works: Array<{ project: PortfolioProject; set: PortfolioCreativeSet }>; nextCategory?: CategoryFilter }) {
+  const stage = categoryStageCopy(category)
+  const slug = slugLabel(category)
+  return <section id={`stage-${slug}`} className={`category-stage stage-${slug}`} aria-labelledby={`stage-${slug}-title`}>
+    <div className="stage-intro reveal-on-scroll">
+      <p className="eyebrow">{category}</p>
+      <h2 id={`stage-${slug}-title`}>{stage.title}</h2>
+      <p>{stage.description}</p>
+    </div>
+    <div className="stage-surface">
+      <div className="portfolio-stack">
+        {works.map(({ project, set }) => <WorkShowcase key={`${category}-${project.id}-${set.id}`} project={project} set={set} />)}
+      </div>
+      {nextCategory && <a className="stage-next" href={`#stage-${slugLabel(nextCategory)}`}>Next: {nextCategory} →</a>}
     </div>
   </section>
 }
@@ -272,6 +307,34 @@ function Contact() {
   </section>
 }
 
+function AboutExperience() {
+  return <section className="about section" id="about">
+    <p className="eyebrow">About</p>
+    <div className="about-layout">
+      <h2>Senior Graphic Designer and Creative Marketing Manager.</h2>
+      <p>I'm a Senior Graphic Designer and Creative Marketing Manager with over a decade of experience creating visually compelling campaigns across Australia and internationally. I combine design expertise with hands-on social media and digital marketing experience, leading projects from concept to execution across creative direction, content creation, video production, packaging design and major campaigns.</p>
+    </div>
+  </section>
+}
+
+function ContactExperience() {
+  return <section className="contact section" id="contact">
+    <p className="eyebrow">Contact</p>
+    <div className="contact-layout">
+      <h2>Let's work together.</h2>
+      <a href="mailto:justakatty@gmail.com">justakatty@gmail.com <span aria-hidden="true">&nearr;</span></a>
+    </div>
+  </section>
+}
+
+function FooterExperience() {
+  return <footer>
+    <a className="brand footer-brand" href="#top" aria-label="Back to top"><span>KH</span><small>Designer</small></a>
+    <p>&copy; 2026 Katty Hozavsky. All rights reserved.</p>
+    <a href="#top">Back to top &uarr;</a>
+  </footer>
+}
+
 function App() {
   useEffect(() => {
     if (!window.location.hash) return
@@ -286,10 +349,11 @@ function App() {
     <main>
       <Hero />
       <PortfolioExplorer />
-      <About />
-      <Contact />
+      <AboutExperience />
+      <ContactExperience />
     </main>
-    <footer>
+    <FooterExperience />
+    <footer hidden>
       <a className="brand footer-brand" href="#top" aria-label="Back to top"><span>KH</span><small>Designer</small></a>
       <p>© 2026 Katty Hozavsky. All rights reserved.</p>
       <a href="#top">Back to top ↑</a>
