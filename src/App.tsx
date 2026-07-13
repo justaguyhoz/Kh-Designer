@@ -46,9 +46,6 @@ function PortfolioExplorer() {
     return portfolioProjects
   }, [mode, selectedClient, selectedDiscipline])
 
-  const charliiProject = portfolioProjects.find((project) => project.displayTheme === 'charlii')
-  const benchmarkProject = visibleProjects.find((project) => project.displayTheme === 'charlii') ?? charliiProject
-
   return <section className="work section" id="work">
     <div className="work-intro">
       <p className="eyebrow">Selected Works</p>
@@ -71,14 +68,20 @@ function PortfolioExplorer() {
       </div>
     </div>
 
-    {benchmarkProject?.displayTheme === 'charlii'
-      ? <CharliiShowcase project={benchmarkProject} />
-      : <ReviewPlaceholder projects={visibleProjects} />}
+    <div className="portfolio-stack">
+      {visibleProjects.map((project, index) => project.displayTheme === 'charlii'
+        ? <CharliiShowcase key={project.id} project={project} />
+        : <ProjectShowcase key={project.id} project={project} index={index} />)}
+    </div>
   </section>
 }
 
 function selectMedia(project: PortfolioProject, match: string) {
   return project.media.find((media) => media.filename.includes(match))
+}
+
+function mediaKey(media: PortfolioMedia) {
+  return media.filename
 }
 
 function MediaFrame({ media, className = '', priority = false }: { media?: PortfolioMedia; className?: string; priority?: boolean }) {
@@ -92,6 +95,42 @@ function MediaFrame({ media, className = '', priority = false }: { media?: Portf
   return <figure className={`media-frame ${className}`}>
     <img src={media.src} width={media.width} height={media.height} alt={media.alt} loading={priority ? 'eager' : 'lazy'} />
   </figure>
+}
+
+function ProjectMediaRun({ project, skip = [] }: { project: PortfolioProject; skip?: string[] }) {
+  const skipSet = new Set(skip)
+  const media = project.media.filter((item) => !skipSet.has(mediaKey(item)))
+  if (!media.length) return null
+
+  return <div className="media-run" aria-label={`${project.title} complete media`}>
+    {media.map((item, index) => <MediaFrame key={item.src} media={item} className={`run-item run-${index % 7}`} />)}
+  </div>
+}
+
+function ProjectShowcase({ project, index }: { project: PortfolioProject; index: number }) {
+  const hero = project.media.find((media) => media.aspect === 'wide') ?? project.media[0]
+  const support = project.media.find((media) => media !== hero && media.aspect !== 'wide') ?? project.media[1]
+  const motion = project.media.find((media) => media.type === 'video')
+  const skip = [hero, support, motion].filter(Boolean).map((media) => mediaKey(media as PortfolioMedia))
+  const tone = `tone-${index % 4}`
+
+  return <article className={`project-showcase ${tone}`} aria-labelledby={`${project.id}-title`}>
+    <div className="project-hero">
+      <div className="project-copy">
+        <p className="eyebrow">{project.client}</p>
+        <h2 id={`${project.id}-title`}>{project.title}</h2>
+        <div className="discipline-tags">
+          {project.disciplines.map((discipline) => <span key={discipline}>{discipline}</span>)}
+        </div>
+      </div>
+      <div className="project-media-composition">
+        <MediaFrame media={hero} className="project-primary" priority={index < 2} />
+        <MediaFrame media={support} className="project-support" />
+        {motion && <MediaFrame media={motion} className="project-motion" />}
+      </div>
+    </div>
+    <ProjectMediaRun project={project} skip={skip} />
+  </article>
 }
 
 function StageLabel({ number, title, note }: { number: string; title: string; note: string }) {
@@ -135,15 +174,15 @@ function CharliiShowcase({ project }: { project: PortfolioProject }) {
     </div>
 
     <div className="funnel-strip" aria-label="Campaign structure">
-      <StageLabel number="1" title="TOF · Awareness" note="Introduce, inspire, build interest" />
-      <StageLabel number="2" title="MOF · Sales" note="Educate, showcase, drive consideration" />
-      <StageLabel number="3" title="BOF · Remarketing" note="Re-engage, reinforce, convert" />
+      <StageLabel number="1" title="TOF - Awareness" note="Introduce, inspire, build interest" />
+      <StageLabel number="2" title="MOF - Sales" note="Educate, showcase, drive consideration" />
+      <StageLabel number="3" title="BOF - Remarketing" note="Re-engage, reinforce, convert" />
     </div>
 
     <section className="stage-composition stage-one" aria-labelledby="tof-title">
       <aside>
         <span>1</span>
-        <h3 id="tof-title">TOF · Awareness</h3>
+        <h3 id="tof-title">TOF - Awareness</h3>
         <p>Introduce. Inspire. Build interest.</p>
       </aside>
       <MediaFrame media={tofSquare} className="span-2 lift-a" />
@@ -154,7 +193,7 @@ function CharliiShowcase({ project }: { project: PortfolioProject }) {
     <section className="stage-composition stage-two" aria-labelledby="mof-title">
       <aside>
         <span>2</span>
-        <h3 id="mof-title">MOF · Sales</h3>
+        <h3 id="mof-title">MOF - Sales</h3>
         <p>Educate. Showcase. Drive consideration.</p>
       </aside>
       <MediaFrame media={mofWide} className="span-2 dark-card lift-b" />
@@ -165,7 +204,7 @@ function CharliiShowcase({ project }: { project: PortfolioProject }) {
     <section className="stage-composition stage-three" aria-labelledby="bof-title">
       <aside>
         <span>3</span>
-        <h3 id="bof-title">BOF · Remarketing</h3>
+        <h3 id="bof-title">BOF - Remarketing</h3>
         <p>Re-engage. Reinforce. Convert.</p>
       </aside>
       <MediaFrame media={bofWide} className="span-2 lift-a" />
@@ -185,18 +224,10 @@ function CharliiShowcase({ project }: { project: PortfolioProject }) {
         </figure>)}
       </div>
     </section>
+    <ProjectMediaRun project={project} skip={[
+      hero, tofSquare, tofDetail, tofPortrait, mofWide, mofSquare, mofPortrait, bofWide, bofSquare, bofPortrait, ...videos,
+    ].filter(Boolean).map((media) => mediaKey(media as PortfolioMedia))} />
   </article>
-}
-
-function ReviewPlaceholder({ projects }: { projects: PortfolioProject[] }) {
-  return <div className="review-placeholder">
-    <p className="eyebrow">Review gate</p>
-    <h2>{projects.length} project{projects.length === 1 ? '' : 's'} match this view.</h2>
-    <p>These clients are connected to the new manifest and filters. Their art-directed sections will be built after the Charlii direction is approved.</p>
-    <div>
-      {projects.map((project) => <span key={project.id}>{project.client}</span>)}
-    </div>
-  </div>
 }
 
 function About() {
