@@ -162,7 +162,7 @@ footer { min-height: 86px; padding: 24px clamp(18px, 4vw, 52px); display: flex; 
 
 @media (max-width: 680px) {
   .section { padding: 32px 14px; }
-  .site-header { height: 62px; padding: 0 14px; }
+  .site-header { height: 62px; padding: 0 14px; background: rgba(251, 243, 240, .98); box-shadow: 0 8px 24px rgba(64, 31, 31, .06); }
   .brand span { font-size: 27px; }
   .brand small { font-size: 8px; letter-spacing: .32em; }
   .menu-toggle { display: block; position: relative; z-index: 2; }
@@ -175,6 +175,7 @@ footer { min-height: 86px; padding: 24px clamp(18px, 4vw, 52px); display: flex; 
   .client-selector-toggle { width: 100%; }
   .client-index { grid-template-columns: 1fr; max-height: 58vh; overflow: auto; }
   .project-showcase { margin-inline: 0; padding: 13px; border-radius: 19px; }
+  .work-card.layout-hero, .work-card.layout-spread, .work-card.layout-identity { padding-inline: 0; }
   .project-intro h2 { font-size: clamp(24px, 8vw, 34px); }
   .work-card-header h2 { font-size: clamp(25px, 8vw, 36px); }
   .creative-set-intro h3 { font-size: clamp(21px, 7vw, 30px); }
@@ -186,6 +187,7 @@ footer { min-height: 86px; padding: 24px clamp(18px, 4vw, 52px); display: flex; 
   .discipline-video .media-video { grid-column: 1 / -1; }
   .layout-spread .media-grid, .layout-campaign .media-grid, .layout-single .media-grid, .layout-social-system .media-grid, .layout-identity .media-grid, .layout-video .media-grid { grid-template-columns: 1fr; width: 100%; }
   .layout-spread .media-grid .media-frame, .layout-campaign .media-grid .media-frame:first-child, .layout-campaign .media-grid .media-frame:nth-child(2), .layout-campaign .media-grid .media-frame:nth-child(3), .layout-campaign .media-grid .media-frame:nth-child(n+4), .layout-single .media-grid .media-frame, .layout-social-system .media-grid .media-frame, .layout-identity .media-grid .media-frame:first-child, .layout-identity .media-grid .media-frame:nth-child(2), .layout-identity .media-grid .media-frame:nth-child(3), .layout-identity .media-grid .media-frame:nth-child(4), .layout-video .media-grid .media-video { grid-column: 1 / -1; width: 100%; max-width: none; }
+  .layout-hero .media-grid .media-full-artwork, .layout-hero .media-grid .media-wide { width: 100%; }
   footer { align-items: flex-start; flex-direction: column; }
 }
 
