@@ -196,7 +196,7 @@ function MediaGroup({ projectId, setId, group, layoutMode = 'campaign', showTitl
   return <section id={groupAnchor} className={`media-group discipline-${group.discipline} layout-${layoutMode}`} aria-labelledby={`${groupAnchor}-title`}>
     {showTitle && group.title && <h4 className="group-title" id={`${groupAnchor}-title`}>{group.title}</h4>}
     <div className="media-grid">
-      {visibleMedia.map((item) => <MediaFrame key={item.id} media={item} />)}
+      {visibleMedia.map((item) => <MediaFrame key={item.id} media={item} className={`outlet-${group.discipline}`} />)}
     </div>
     {canExpand && <button className="view-more" type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded}>
       {expanded ? 'View Less' : 'View More'}
@@ -256,7 +256,8 @@ function About() {
   return <section className="about section" id="about">
     <p className="eyebrow">About</p>
     <div className="about-layout">
-      <h2>Brand, campaign, digital, print and social work.</h2>
+      <h2>Senior Graphic Designer and Creative Marketing Manager.</h2>
+      <p>I’m a Senior Graphic Designer and Creative Marketing Manager with over a decade of experience creating visually compelling campaigns across Australia and internationally. I combine design expertise with hands-on social media and digital marketing experience, leading projects from concept to execution across creative direction, content creation, video production, packaging design and major campaigns.</p>
     </div>
   </section>
 }
