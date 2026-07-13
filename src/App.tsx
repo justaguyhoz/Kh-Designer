@@ -1,124 +1,270 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { projects, videoPoster, videoTitle, type Project } from './data/projects'
-import type { MediaItem } from './data/mediaManifest.generated'
+import { useMemo, useState } from 'react'
+import { clients, disciplines, portfolioProjects, videoTitle, type PortfolioMedia, type PortfolioProject } from './data/projects'
 
-type DisplayMedia = MediaItem & { kind: 'image' | 'video'; poster?: string; displayTitle?: string }
+type BrowseMode = 'all' | 'client' | 'discipline'
 
-const Arrow = ({ back = false }: { back?: boolean }) => <span aria-hidden="true">{back ? '←' : '→'}</span>
+const Arrow = () => <span aria-hidden="true">→</span>
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const items = ['Work', 'About', 'Contact']
+
   return <header className="site-header">
-    <a className="logo" href="#top" aria-label="Katty Hozavsky home">KH.</a>
+    <a className="brand" href="#top" aria-label="Katty Hozavsky home"><span>KH</span><small>Designer</small></a>
     <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="main-nav">{menuOpen ? 'Close' : 'Menu'}</button>
     <nav id="main-nav" className={menuOpen ? 'main-nav open' : 'main-nav'} aria-label="Main navigation">
-      {['Projects', 'About', 'Contact'].map((label) => <a key={label} href={`#${label.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{label}</a>)}
+      {items.map((label) => <a key={label} href={`#${label.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{label}</a>)}
     </nav>
   </header>
 }
 
 function Hero() {
   return <section className="hero" id="top">
-    <div><p className="kicker">Senior Graphic Designer &amp; Social Media Creator</p><h1>I create clear, confident design built to connect.</h1></div>
-    <div className="hero-bottom"><p>I work across brand, campaign, digital, social, packaging, print, EDMs and motion.</p><a className="text-link" href="#projects">Selected projects <Arrow /></a></div>
+    <p className="eyebrow">Katty Hozavsky Senior Designer &amp; Social Media Creator</p>
+    <div className="hero-grid">
+      <h1>Portfolio work, composed with the same care as the campaigns.</h1>
+      <div className="hero-note">
+        <p>Selected Works</p>
+        <a href="#work">Explore by client or discipline <Arrow /></a>
+      </div>
+    </div>
   </section>
 }
 
-function ProjectCard({ project, onOpen }: { project: Project; onOpen: () => void }) {
-  const cover = project.images[0]
-  return <button className={`project-card card-${cover?.aspect ?? 'square'}`} onClick={onOpen} aria-label={`Open ${project.title} project`}>
-    <span className="card-media">
-      <img src={project.cover} width={cover?.width || undefined} height={cover?.height || undefined} alt={`${project.title} project preview`} loading="lazy" />
-      {project.videos.length > 0 && <span className="motion-badge">Motion</span>}
-    </span>
-    <span className="card-copy"><strong>{project.title}</strong><small>{project.category}</small></span>
-  </button>
+function FilterButton({ active, children, onClick }: { active: boolean; children: string; onClick: () => void }) {
+  return <button className={active ? 'filter-chip active' : 'filter-chip'} onClick={onClick} aria-pressed={active}>{children}</button>
 }
 
-function Projects({ onOpen }: { onOpen: (index: number) => void }) {
-  return <section className="projects section" id="projects">
-    <div className="section-heading"><p className="kicker">Selected projects</p><p>Brand, campaign, digital, packaging, print and social design.</p></div>
-    <div className="project-grid">{projects.map((project, index) => <ProjectCard key={project.id} project={project} onOpen={() => onOpen(index)} />)}</div>
+function PortfolioExplorer() {
+  const [mode, setMode] = useState<BrowseMode>('client')
+  const [selectedClient, setSelectedClient] = useState('Charlii')
+  const [selectedDiscipline, setSelectedDiscipline] = useState('Social')
+
+  const visibleProjects = useMemo(() => {
+    if (mode === 'client') return portfolioProjects.filter((project) => project.client === selectedClient)
+    if (mode === 'discipline') return portfolioProjects.filter((project) => project.disciplines.includes(selectedDiscipline))
+    return portfolioProjects
+  }, [mode, selectedClient, selectedDiscipline])
+
+  return <section className="work section" id="work">
+    <div className="work-intro">
+      <p className="eyebrow">Selected Works</p>
+      <div>
+        <h2>Browse the same work two ways.</h2>
+        <p>Client view shows the range for one brand. Discipline view gathers the same project data by format.</p>
+      </div>
+    </div>
+
+    <div className="portfolio-controls" aria-label="Portfolio browsing controls">
+      <div className="mode-switch" role="group" aria-label="Browse mode">
+        <FilterButton active={mode === 'all'} onClick={() => setMode('all')}>All work</FilterButton>
+        <FilterButton active={mode === 'client'} onClick={() => setMode('client')}>By client</FilterButton>
+        <FilterButton active={mode === 'discipline'} onClick={() => setMode('discipline')}>By discipline</FilterButton>
+      </div>
+      <div className="filter-row" aria-label={mode === 'discipline' ? 'Disciplines' : 'Clients'}>
+        {mode === 'discipline'
+          ? disciplines.map((discipline) => <FilterButton key={discipline} active={selectedDiscipline === discipline} onClick={() => setSelectedDiscipline(discipline)}>{discipline}</FilterButton>)
+          : clients.map((client) => <FilterButton key={client} active={selectedClient === client} onClick={() => setSelectedClient(client)}>{client}</FilterButton>)}
+      </div>
+    </div>
+
+    <div className="portfolio-stack">
+      {visibleProjects.map((project, index) => project.displayTheme === 'charlii'
+        ? <CharliiShowcase key={project.id} project={project} />
+        : <ProjectShowcase key={project.id} project={project} index={index} />)}
+    </div>
   </section>
 }
 
-function orderedMedia(project: Project): DisplayMedia[] {
-  const images = project.images.map((image) => ({ ...image, kind: 'image' as const }))
-  const videos = project.videos.map((video, index) => ({
-    ...video,
-    kind: 'video' as const,
-    poster: videoPoster(project.id, index),
-    displayTitle: videoTitle(video.filename, video.label),
-  }))
-  if (!videos.length) return images
-  return [...images.slice(0, 2), videos[0], ...images.slice(2), ...videos.slice(1)]
+function selectMedia(project: PortfolioProject, match: string) {
+  return project.media.find((media) => media.filename.includes(match))
 }
 
-function MediaBlock({ media, project }: { media: DisplayMedia; project: Project }) {
-  if (media.kind === 'video') return <figure className="detail-media media-video">
-    <video src={media.src} poster={media.poster} controls playsInline preload="metadata" aria-label={`${project.title}: ${media.displayTitle} video`} />
-  </figure>
-  return <figure className={`detail-media media-${media.aspect ?? 'square'}`}>
-    <img src={media.src} width={media.width || undefined} height={media.height || undefined} alt={`${project.title}: ${media.label}`} loading="lazy" />
-  </figure>
+function mediaKey(media: PortfolioMedia) {
+  return media.filename
 }
 
-function ProjectOverlay({ index, onClose, onChange }: { index: number; onClose: () => void; onChange: (index: number) => void }) {
-  const project = projects[index]
-  const media = useMemo(() => orderedMedia(project), [project])
-  const [showMore, setShowMore] = useState(false)
-  const [showFloatingClose, setShowFloatingClose] = useState(false)
-  const closeRef = useRef<HTMLButtonElement>(null)
-  const backdropRef = useRef<HTMLDivElement>(null)
-  const visibleMedia = showMore ? media : media.slice(0, 5)
-  const changeProject = (nextIndex: number) => {
-    setShowMore(false)
-    setShowFloatingClose(false)
-    if (backdropRef.current) backdropRef.current.scrollTop = 0
-    onChange(nextIndex)
+function MediaFrame({ media, className = '', priority = false }: { media?: PortfolioMedia; className?: string; priority?: boolean }) {
+  if (!media) return null
+  if (media.type === 'video') {
+    return <figure className={`media-frame ${className}`}>
+      <video src={media.src} poster={media.poster} autoPlay muted loop playsInline preload="metadata" aria-label={media.alt} />
+    </figure>
   }
 
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    closeRef.current?.focus()
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-      if (event.key === 'ArrowLeft') changeProject((index - 1 + projects.length) % projects.length)
-      if (event.key === 'ArrowRight') changeProject((index + 1) % projects.length)
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => { document.body.style.overflow = previousOverflow; window.removeEventListener('keydown', onKeyDown) }
-  }, [index, onChange, onClose])
+  return <figure className={`media-frame ${className}`}>
+    <img src={media.src} width={media.width} height={media.height} alt={media.alt} loading={priority ? 'eager' : 'lazy'} />
+  </figure>
+}
 
-  return <>
-    <div ref={backdropRef} className="overlay-backdrop" onScroll={(event) => setShowFloatingClose(event.currentTarget.scrollTop > 140)} onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <article className="project-overlay" role="dialog" aria-modal="true" aria-labelledby="project-title">
-        <div className="overlay-toolbar"><span>KH.</span><button ref={closeRef} onClick={onClose}>Close <span aria-hidden="true">×</span></button></div>
-        <header className="overlay-header"><div><p className="kicker">{project.category}</p><h2 id="project-title">{project.title}</h2></div><p>{project.description}</p></header>
-        <div className="detail-gallery">{visibleMedia.map((item) => <MediaBlock key={item.src} media={item} project={project} />)}</div>
-        {!showMore && media.length > 5 && <button className="show-more" onClick={() => setShowMore(true)}>Show more work <Arrow /></button>}
-        <nav className="overlay-pager" aria-label="Project navigation">
-          <button onClick={() => changeProject((index - 1 + projects.length) % projects.length)}><Arrow back /> Previous project</button>
-          <button onClick={() => changeProject((index + 1) % projects.length)}>Next project <Arrow /></button>
-        </nav>
-      </article>
+function ProjectMediaRun({ project, skip = [] }: { project: PortfolioProject; skip?: string[] }) {
+  const skipSet = new Set(skip)
+  const media = project.media.filter((item) => !skipSet.has(mediaKey(item)))
+  if (!media.length) return null
+
+  return <div className="media-run" aria-label={`${project.title} complete media`}>
+    {media.map((item, index) => <MediaFrame key={item.src} media={item} className={`run-item run-${index % 7}`} />)}
+  </div>
+}
+
+function ProjectShowcase({ project, index }: { project: PortfolioProject; index: number }) {
+  const hero = project.media.find((media) => media.aspect === 'wide') ?? project.media[0]
+  const support = project.media.find((media) => media !== hero && media.aspect !== 'wide') ?? project.media[1]
+  const motion = project.media.find((media) => media.type === 'video')
+  const skip = [hero, support, motion].filter(Boolean).map((media) => mediaKey(media as PortfolioMedia))
+  const tone = `tone-${index % 4}`
+
+  return <article className={`project-showcase ${tone}`} aria-labelledby={`${project.id}-title`}>
+    <div className="project-hero">
+      <div className="project-copy">
+        <p className="eyebrow">{project.client}</p>
+        <h2 id={`${project.id}-title`}>{project.title}</h2>
+        <div className="discipline-tags">
+          {project.disciplines.map((discipline) => <span key={discipline}>{discipline}</span>)}
+        </div>
+      </div>
+      <div className="project-media-composition">
+        <MediaFrame media={hero} className="project-primary" priority={index < 2} />
+        <MediaFrame media={support} className="project-support" />
+        {motion && <MediaFrame media={motion} className="project-motion" />}
+      </div>
     </div>
-    {showFloatingClose && <button className="floating-close" onClick={onClose} aria-label="Close project"><span aria-hidden="true">×</span></button>}
-  </>
+    <ProjectMediaRun project={project} skip={skip} />
+  </article>
+}
+
+function StageLabel({ number, title, note }: { number: string; title: string; note: string }) {
+  return <div className="stage-label">
+    <span>{number}</span>
+    <div><strong>{title}</strong><small>{note}</small></div>
+  </div>
+}
+
+function CharliiShowcase({ project }: { project: PortfolioProject }) {
+  const hero = selectMedia(project, 'TOF_ad-2_landscape')
+  const tofSquare = selectMedia(project, 'TOF_ad_2.jpg')
+  const tofDetail = selectMedia(project, 'TOF_ad_3.jpg')
+  const tofPortrait = selectMedia(project, 'TOF_ad-3_long')
+  const mofWide = selectMedia(project, 'MOF_ad-1_landscape')
+  const mofSquare = selectMedia(project, 'MOF_ad-2.jpg')
+  const mofPortrait = selectMedia(project, 'MOF_ad-1_long')
+  const bofWide = selectMedia(project, 'BOF_ad-1_landscape')
+  const bofSquare = selectMedia(project, 'BOF_ad-2.jpg')
+  const bofPortrait = selectMedia(project, 'BOF_ad-1_long')
+  const videos = project.media.filter((media) => media.type === 'video')
+
+  return <article className="charlii-showcase" aria-labelledby="charlii-title">
+    <div className="charlii-hero">
+      <div className="charlii-title">
+        <p className="eyebrow">Social Media Video Campaigns</p>
+        <h2 id="charlii-title">{project.title}</h2>
+        <p className="subtitle">Full funnel social media campaign</p>
+        <div className="discipline-tags">
+          {project.disciplines.map((discipline) => <span key={discipline}>{discipline}</span>)}
+        </div>
+      </div>
+      <div className="hero-composition">
+        <MediaFrame media={hero} className="hero-card" priority />
+        <div className="quote-card">
+          <span aria-hidden="true">“</span>
+          <p>Salon Results<br />at home</p>
+          <small>Charlii Hair Rollers</small>
+        </div>
+      </div>
+    </div>
+
+    <div className="funnel-strip" aria-label="Campaign structure">
+      <StageLabel number="1" title="TOF - Awareness" note="Introduce, inspire, build interest" />
+      <StageLabel number="2" title="MOF - Sales" note="Educate, showcase, drive consideration" />
+      <StageLabel number="3" title="BOF - Remarketing" note="Re-engage, reinforce, convert" />
+    </div>
+
+    <section className="stage-composition stage-one" aria-labelledby="tof-title">
+      <aside>
+        <span>1</span>
+        <h3 id="tof-title">TOF - Awareness</h3>
+        <p>Introduce. Inspire. Build interest.</p>
+      </aside>
+      <MediaFrame media={tofSquare} className="span-2 lift-a" />
+      <MediaFrame media={tofDetail} className="lift-b" />
+      <MediaFrame media={tofPortrait} className="portrait-card lift-c" />
+    </section>
+
+    <section className="stage-composition stage-two" aria-labelledby="mof-title">
+      <aside>
+        <span>2</span>
+        <h3 id="mof-title">MOF - Sales</h3>
+        <p>Educate. Showcase. Drive consideration.</p>
+      </aside>
+      <MediaFrame media={mofWide} className="span-2 dark-card lift-b" />
+      <MediaFrame media={mofSquare} className="lift-c" />
+      <MediaFrame media={mofPortrait} className="portrait-card lift-a" />
+    </section>
+
+    <section className="stage-composition stage-three" aria-labelledby="bof-title">
+      <aside>
+        <span>3</span>
+        <h3 id="bof-title">BOF - Remarketing</h3>
+        <p>Re-engage. Reinforce. Convert.</p>
+      </aside>
+      <MediaFrame media={bofWide} className="span-2 lift-a" />
+      <MediaFrame media={bofSquare} className="lift-b" />
+      <MediaFrame media={bofPortrait} className="portrait-card lift-c" />
+    </section>
+
+    <section className="motion-strip" aria-labelledby="motion-title">
+      <div>
+        <p className="eyebrow">Motion</p>
+        <h3 id="motion-title">Video variants sit inside the campaign system.</h3>
+      </div>
+      <div className="video-rail">
+        {videos.map((video) => <figure className="video-card" key={video.src}>
+          <video src={video.src} poster={video.poster} autoPlay muted loop playsInline preload="metadata" aria-label={video.alt} />
+          <figcaption>{videoTitle(video.filename, video.label)}</figcaption>
+        </figure>)}
+      </div>
+    </section>
+    <ProjectMediaRun project={project} skip={[
+      hero, tofSquare, tofDetail, tofPortrait, mofWide, mofSquare, mofPortrait, bofWide, bofSquare, bofPortrait, ...videos,
+    ].filter(Boolean).map((media) => mediaKey(media as PortfolioMedia))} />
+  </article>
 }
 
 function About() {
-  return <section className="about section" id="about"><p className="kicker">About</p><div className="about-layout"><h2>I turn ideas into visual systems that work.</h2><div><p>I am a senior graphic designer and social media creator working across brand identity, campaign creative, digital design, print, packaging, EDMs and motion.</p><p>I bring visual instinct and practical thinking together to make work that communicates clearly and stays consistent across formats.</p></div></div></section>
+  return <section className="about section" id="about">
+    <p className="eyebrow">About</p>
+    <div className="about-layout">
+      <h2>I build visual systems for brand, campaign, digital, print and social work.</h2>
+      <p>Copy here is intentionally restrained until project text is verified from the existing portfolio source.</p>
+    </div>
+  </section>
 }
 
 function Contact() {
-  return <section className="contact section" id="contact"><p className="kicker">Contact</p><div className="contact-layout"><h2>Let’s work together.</h2><div><p>For freelance, contract and in-house senior design opportunities.</p><a href="mailto:justakatty@gmail.com">justakatty@gmail.com <span>↗</span></a></div></div></section>
+  return <section className="contact section" id="contact">
+    <p className="eyebrow">Contact</p>
+    <div className="contact-layout">
+      <h2>Let’s work together.</h2>
+      <a href="mailto:justakatty@gmail.com">justakatty@gmail.com <span aria-hidden="true">↗</span></a>
+    </div>
+  </section>
 }
 
 function App() {
-  const [selected, setSelected] = useState<number | null>(null)
-  return <><Header /><main><Hero /><Projects onOpen={setSelected} /><About /><Contact /></main><footer><a className="logo" href="#top">KH.</a><p>© 2026 Katty Hozavsky. All rights reserved.</p><a href="#top">Back to top ↑</a></footer>{selected !== null && <ProjectOverlay index={selected} onClose={() => setSelected(null)} onChange={setSelected} />}</>
+  return <>
+    <Header />
+    <main>
+      <Hero />
+      <PortfolioExplorer />
+      <About />
+      <Contact />
+    </main>
+    <footer>
+      <a className="brand footer-brand" href="#top" aria-label="Back to top"><span>KH</span><small>Designer</small></a>
+      <p>© 2026 Katty Hozavsky. All rights reserved.</p>
+      <a href="#top">Back to top ↑</a>
+    </footer>
+  </>
 }
 
 export default App
