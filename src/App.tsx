@@ -11,6 +11,7 @@ import {
   type CreativeDirection,
   type PortfolioCreativeSet,
   type PortfolioDiscipline,
+  type PortfolioLayoutMode,
   type PortfolioMedia,
   type PortfolioMediaGroup,
   type PortfolioProject,
@@ -49,7 +50,7 @@ function PortfolioExplorer() {
   const [selectorOpen, setSelectorOpen] = useState(initialFilter === 'Projects' && initialClient === 'Charlii')
   const [motionReady, setMotionReady] = useState(false)
 
-  const selectedProject = portfolioProjects.find((project) => project.client === selectedClient) ?? portfolioProjects[0]
+  const selectedProject = portfolioProjects.find((project) => project.client === selectedClient) ?? portfolioProjects[0]!
   const activeDiscipline = filterDisciplines[activeFilter]
 
   const filteredProjects = useMemo(() => {
@@ -143,10 +144,11 @@ function ClientSelector({ open, selectedClient, onToggle, onSelect }: { open: bo
   </div>
 }
 
-function filterProjectByDiscipline(project: PortfolioProject, discipline: PortfolioDiscipline) {
+function filterProjectByDiscipline(project: PortfolioProject, discipline: PortfolioDiscipline): PortfolioProject | undefined {
   const creativeSets = project.creativeSets
     .map((set) => ({
       ...set,
+      layoutMode: discipline === 'video' ? 'video' as const : set.layoutMode,
       disciplines: set.disciplines.filter((item) => item === discipline),
       mediaGroups: set.mediaGroups.filter((group) => group.discipline === discipline),
     }))
@@ -184,15 +186,15 @@ function WorkContext({ label, items, fallback }: { label?: string; items?: strin
   </aside>
 }
 
-function MediaGroup({ projectId, setId, group }: { projectId: string; setId: string; group: PortfolioMediaGroup }) {
+function MediaGroup({ projectId, setId, group, layoutMode = 'campaign', showTitle = false }: { projectId: string; setId: string; group: PortfolioMediaGroup; layoutMode?: PortfolioLayoutMode; showTitle?: boolean }) {
   const groupAnchor = `${projectId}-${setId}-${group.id}`
   const [expanded, setExpanded] = useState(() => typeof window !== 'undefined' && window.location.hash.slice(1) === `${groupAnchor}-expanded`)
   const initialCount = group.initialVisibleCount ?? 4
   const canExpand = group.media.length > initialCount
   const visibleMedia = expanded || !canExpand ? group.media : group.media.slice(0, initialCount)
 
-  return <section id={groupAnchor} className={`media-group discipline-${group.discipline}`} aria-labelledby={`${groupAnchor}-title`}>
-    {group.title && <h4 className="group-title" id={`${groupAnchor}-title`}>{group.title}</h4>}
+  return <section id={groupAnchor} className={`media-group discipline-${group.discipline} layout-${layoutMode}`} aria-labelledby={`${groupAnchor}-title`}>
+    {showTitle && group.title && <h4 className="group-title" id={`${groupAnchor}-title`}>{group.title}</h4>}
     <div className="media-grid">
       {visibleMedia.map((item) => <MediaFrame key={item.id} media={item} />)}
     </div>
@@ -213,7 +215,7 @@ function CreativeSetSection({ projectId, set }: { projectId: string; set: Portfo
       <WorkContext label={set.contextLabel} items={set.context} fallback={set.creativeDirection} />
     </div>
     <div className="set-groups">
-      {set.mediaGroups.map((group) => <MediaGroup key={group.id} projectId={projectId} setId={set.id} group={group} />)}
+      {set.mediaGroups.map((group) => <MediaGroup key={group.id} projectId={projectId} setId={set.id} group={group} layoutMode={set.layoutMode} showTitle />)}
     </div>
   </section>
 }
@@ -222,7 +224,9 @@ function WorkShowcase({ project, set }: { project: PortfolioProject; set: Portfo
   const showEyebrow = project.client !== set.title
   const descriptor = set.description ?? (project.title !== set.title ? project.title : undefined)
 
-  return <article id={`${project.id}-${set.id}`} className="project-showcase work-card reveal-on-scroll" aria-labelledby={`${project.id}-${set.id}-title`}>
+  const layoutMode = set.layoutMode ?? 'campaign'
+
+  return <article id={`${project.id}-${set.id}`} className={`project-showcase work-card layout-${layoutMode} reveal-on-scroll`} aria-labelledby={`${project.id}-${set.id}-title`}>
     <div className="work-card-header">
       {showEyebrow && <p className="eyebrow">{project.client}</p>}
       <h2 id={`${project.id}-${set.id}-title`}>{set.title}</h2>
@@ -230,7 +234,7 @@ function WorkShowcase({ project, set }: { project: PortfolioProject; set: Portfo
       <WorkContext label={set.contextLabel} items={set.context} fallback={set.creativeDirection} />
     </div>
     <div className="set-groups">
-      {set.mediaGroups.map((group) => <MediaGroup key={group.id} projectId={project.id} setId={set.id} group={group} />)}
+      {set.mediaGroups.map((group) => <MediaGroup key={group.id} projectId={project.id} setId={set.id} group={group} layoutMode={layoutMode} />)}
     </div>
   </article>
 }

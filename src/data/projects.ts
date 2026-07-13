@@ -2,6 +2,7 @@ import { mediaAudit, mediaManifest, type MediaItem } from './mediaManifest.gener
 
 export type PortfolioDiscipline = 'social-ads' | 'organic-social' | 'magazine-ads' | 'branding' | 'video' | 'packaging' | 'edm' | 'brochure'
 export type MediaPresentation = 'wide' | 'square' | 'portrait' | 'full-artwork'
+export type PortfolioLayoutMode = 'hero' | 'spread' | 'campaign' | 'single' | 'social-system' | 'identity' | 'video'
 
 export type PortfolioMedia = MediaItem & {
   id: string
@@ -34,6 +35,7 @@ export type PortfolioCreativeSet = {
   description?: string
   contextLabel?: string
   context?: string[]
+  layoutMode?: PortfolioLayoutMode
   disciplines: PortfolioDiscipline[]
   creativeDirection?: CreativeDirection
   mediaGroups: PortfolioMediaGroup[]
@@ -156,7 +158,7 @@ function makeSet(
   title: string,
   mediaGroups: Array<PortfolioMediaGroup | undefined>,
   creativeDirection?: CreativeDirection,
-  details: Pick<PortfolioCreativeSet, 'description' | 'contextLabel' | 'context'> = {},
+  details: Pick<PortfolioCreativeSet, 'description' | 'contextLabel' | 'context' | 'layoutMode'> = {},
 ): PortfolioCreativeSet | undefined {
   const groups = mediaGroups.filter(Boolean) as PortfolioMediaGroup[]
   if (!groups.length) return undefined
@@ -170,29 +172,65 @@ function makeSet(
   }
 }
 
+const orderedBy = (media: PortfolioMedia[], patterns: Array<string | RegExp>) =>
+  patterns.flatMap((pattern) => byName(media, [pattern])).filter((item, index, items) =>
+    items.findIndex((candidate) => candidate.filename === item.filename) === index)
+
 function buildCharlii(media: PortfolioMedia[]) {
-  const pink = byName(media, [/TOF_ad/i, /BOF_ad/i, /MOF_ad-2/i, /TOF_video/i, /MOF_video_2/i, /BOF_vid/i])
-  const brown = byName(media, [/MOF_ad-1/i, /MOF_Mega Marylin Set/i])
+  const images = media.filter((item) => item.type === 'image')
+  const videos = media.filter((item) => item.type === 'video')
+  const megaMarilyn = orderedBy(images, [
+    /BOF_ad-1_landscape/i, /BOF_ad-1\.jpg/i, /BOF_ad-1_long/i,
+    /BOF_ad-2_landscape/i, /BOF_ad-2\.jpg/i, /BOF_ad-2_long/i,
+    /MOF_ad-1_landscape/i, /MOF_ad-1\.jpg/i, /MOF_ad-1_long/i,
+    /MOF_ad-2_landscape/i, /MOF_ad-2\.jpg/i, /MOF_ad-2_long/i,
+  ])
+  const salonResults = orderedBy(images, [/TOF_ad-2_landscape/i, /TOF_ad_2\.jpg/i, /TOF_ad-2_long/i])
+  const noHeatDamage = orderedBy(images, [/TOF_ad-3_landscape/i, /TOF_ad_3\.jpg/i, /TOF_ad-3_long/i])
+  const volumeLasts = orderedBy(images, [/TOF_ad_1_landscape/i, /TOF_ad_1\.jpg/i, /TOF_ad_1_long/i])
+  const confidence = orderedBy(images, [/TOF_ad_4_for later/i])
   return [
-    makeSet('salon-results-at-home', 'Charlii Hair Rollers', [
-      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', pink.filter((item) => item.type === 'image')),
-      makeGroup('videos', 'VIDEOS', 'video', pink.filter((item) => item.type === 'video')),
-    ], {
-      messaging: ['Salon Results at home', 'No heat damage'],
-    }, {
-      description: 'Full funnel social media campaign',
-      contextLabel: 'Campaign idea',
-      context: ['Salon Results at home', 'No heat damage'],
-    }),
     makeSet('mega-marilyn-stylist-set', 'Mega Marilyn Stylist Set', [
-      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', brown.filter((item) => item.type === 'image')),
-      makeGroup('videos', 'VIDEOS', 'video', brown.filter((item) => item.type === 'video')),
-    ], {
-      messaging: ['Mega Marilyn Stylist Set'],
-    }, {
-      description: 'Product-led social campaign',
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', megaMarilyn),
+      makeGroup('videos', 'VIDEOS', 'video', byName(videos, [/MOF_Mega Marylin Set/i])),
+    ], undefined, {
+      description: 'Social campaign',
+      layoutMode: 'campaign',
+    }),
+    makeSet('salon-results-at-home', 'Salon Results at Home', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', salonResults),
+      makeGroup('videos', 'VIDEOS', 'video', byName(videos, [/TOF_video/i])),
+    ], undefined, {
+      description: 'Social campaign',
       contextLabel: 'Key line',
-      context: ['Mega Marilyn Stylist Set'],
+      context: ['Salon Results at home'],
+      layoutMode: 'campaign',
+    }),
+    makeSet('no-heat-damage', 'No Heat Damage', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', noHeatDamage),
+      makeGroup('videos', 'VIDEOS', 'video', byName(videos, [/MOF_video_2/i])),
+    ], undefined, {
+      description: 'Social campaign',
+      contextLabel: 'Key line',
+      context: ['No heat damage'],
+      layoutMode: 'campaign',
+    }),
+    makeSet('volume-that-lasts-all-night', 'Volume That Lasts All Night', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', volumeLasts),
+      makeGroup('videos', 'VIDEOS', 'video', byName(videos, [/BOF_vid/i])),
+    ], undefined, {
+      description: 'Social campaign',
+      contextLabel: 'Key line',
+      context: ['Volume that lasts all night'],
+      layoutMode: 'campaign',
+    }),
+    makeSet('wear-it-with-confidence', 'Wear It With Confidence', [
+      makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', confidence),
+    ], undefined, {
+      description: 'Social campaign',
+      contextLabel: 'Key line',
+      context: ['Wear it with confidence'],
+      layoutMode: 'single',
     }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }
@@ -207,36 +245,36 @@ function buildPowertec(media: PortfolioMedia[]) {
   const powertecVideos = byName(media, [/Powertec_Traffic/i, /powertec-awarness/i, /powertec-sales/i])
 
   return [
-    makeSet('r41-magazine-campaign', 'Powertec R41 Magazine Campaign', [
+    makeSet('r41-magazine-campaign', 'R41', [
       makeGroup('magazine-ads', 'MAGAZINE ADS', 'magazine-ads', magazine, { presentation: 'full-artwork' }),
-    ], undefined, { description: 'Magazine ads' }),
+    ], undefined, { description: 'Magazine campaign', layoutMode: 'hero' }),
     makeSet('powertec-packaging', 'Powertec Packaging', [
       makeGroup('packaging', 'PACKAGING', 'packaging', packaging, { presentation: 'full-artwork' }),
-    ], undefined, { description: 'Packaging' }),
+    ], undefined, { description: 'Packaging', layoutMode: 'identity' }),
     makeSet('watchai-branding-packaging', 'WatchAI', [
       makeGroup('branding', 'BRANDING / PACKAGING', 'branding', watchAiPackaging, { presentation: 'full-artwork' }),
       makeGroup('videos', 'VIDEOS', 'video', watchAiVideos),
-    ], undefined, { description: 'Branding and packaging' }),
+    ], undefined, { description: 'Branding and packaging', layoutMode: 'identity' }),
     makeSet('outback-marine-campaign', 'Outback Marine', [
       makeGroup('social-ads', 'SOCIAL ADS', 'social-ads', staticSocial, { presentation: 'full-artwork' }),
       makeGroup('videos', 'VIDEOS', 'video', outbackVideos),
-    ], undefined, { description: 'Social and video campaign' }),
+    ], undefined, { description: 'Social and video campaign', layoutMode: 'hero' }),
     makeSet('powertec-video-campaigns', 'Powertec Video Campaigns', [
       makeGroup('videos', 'VIDEOS', 'video', powertecVideos),
-    ], undefined, { description: 'Video' }),
+    ], undefined, { description: 'Video', layoutMode: 'video' }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }
 
 function buildAustralis(media: PortfolioMedia[]) {
-  const orange = byName(media, [/Australis Music Group \([1-3]\)\.jpg/i])
-  const eventIdentity = byName(media, [/Australis Music Group \(4\)\.jpg/i, /Australis Music Group\.jpg/i])
+  const orange = orderedBy(media, [/Australis Music Group \(1\)\.jpg/i, /Australis Music Group\.jpg/i])
+  const eventIdentity = orderedBy(media, [/Australis Music Group \(4\)\.jpg/i, /Australis Music Group \(3\)\.jpg/i, /Australis Music Group \(2\)\.jpg/i])
   return [
     makeSet('orange-amplifiers-brand-guide', 'Orange Amplifiers', [
       makeGroup('branding', 'BRANDING', 'branding', orange, { presentation: 'full-artwork' }),
-    ], undefined, { description: 'Brand guide' }),
+    ], undefined, { description: 'Brand guide and social system', layoutMode: 'identity' }),
     makeSet('tac-event-identity', 'TAC', [
       makeGroup('branding', 'BRANDING', 'branding', eventIdentity, { presentation: 'full-artwork' }),
-    ], undefined, { description: 'Event identity' }),
+    ], undefined, { description: 'Event identity', layoutMode: 'identity' }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }
 
@@ -253,8 +291,7 @@ function buildUN(media: PortfolioMedia[]) {
       makeGroup('magazine-ads', 'MAGAZINE ADS', 'magazine-ads', [item], { presentation: 'portrait' }),
     ], undefined, {
       description: 'COVID-19 Campaign',
-      contextLabel: 'Message',
-      context: [concept.message],
+      layoutMode: 'single',
     })
   }).filter(Boolean) as PortfolioCreativeSet[]
 }
@@ -297,6 +334,16 @@ function buildGeneric(projectId: string, folder: string, title: string, media: P
     'The Brooklyn_Wine & Tapas Bar': 'Organic Social',
     'All Day Workwear': 'Campaign banners',
   }
+  const layoutModes: Record<string, PortfolioLayoutMode> = {
+    AUDI: 'single',
+    Hardtuned: 'single',
+    'Elemental Studio': 'single',
+    FaceitGraphix: 'identity',
+    'Real Estate': 'single',
+    'Kean Construction group': 'campaign',
+    'The Brooklyn_Wine & Tapas Bar': 'social-system',
+    'All Day Workwear': 'spread',
+  }
   const setTitle = setTitles[folder] ?? title
 
   return [
@@ -305,7 +352,7 @@ function buildGeneric(projectId: string, folder: string, title: string, media: P
         presentation: fullArtworkFolders.includes(folder) ? 'full-artwork' : undefined,
       }),
       makeGroup('videos', 'VIDEOS', 'video', videos),
-    ], undefined, { description: descriptions[folder] }),
+    ], undefined, { description: descriptions[folder], layoutMode: layoutModes[folder] }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }
 
@@ -315,13 +362,14 @@ function buildSycamore(media: PortfolioMedia[]) {
   return [
     makeSet('sycamore-organic-social', 'The Sycamore School', [
       makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', organic),
-    ], undefined, { description: 'Organic Social' }),
+    ], undefined, { description: 'Organic Social', layoutMode: 'campaign' }),
     makeSet('sycamore-video', 'The Sycamore School', [
       makeGroup('videos', 'VIDEOS', 'video', videos),
     ], { messaging: ['This is Sycamore'] }, {
       description: 'Video',
       contextLabel: 'Campaign line',
       context: ['This is Sycamore'],
+      layoutMode: 'video',
     }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }
@@ -330,15 +378,55 @@ function buildVetner(media: PortfolioMedia[]) {
   return [
     makeSet('vetner-organic-social', 'Vetner', [
       makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', media.filter((item) => item.type === 'image')),
-    ], undefined, { description: 'Organic Social' }),
+    ], undefined, { description: 'Organic Social', layoutMode: 'campaign' }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }
 
 function buildSpinal(media: PortfolioMedia[]) {
+  const images = media.filter((item) => item.type === 'image')
+  const disabilityAtHome = orderedBy(images, [
+    /1-remarketing-ad-set_landscape/i,
+    /1-remarketing-ad-set\.jpg/i,
+    /1-remarketing-ad-set_long/i,
+  ])
+  const ndisSupport = orderedBy(images, [
+    /2-lookalike-ad-set_landscape/i,
+    /2-lookalike-ad-set\.jpg/i,
+    /2-lookalike-ad-set_long/i,
+  ])
+  const returnWorkStudy = orderedBy(images, [
+    /26016-Back2Work_v2_landscape/i,
+    /26016 Back2Work_v2_square/i,
+    /26016-Back2Work_v2_long/i,
+    /back2work-campaign_BOF_Leads_ad-1/i,
+  ])
+  const careerPathways = orderedBy(images, [
+    /26016-Back2Work_v3_landscape/i,
+    /26016 Back2Work_v3_square/i,
+    /26016-Back2Work_v3_long/i,
+    /back2work-campaign_BOF_Leads_ad-2/i,
+  ])
+  const exploreBack2Work = orderedBy(images, [
+    /back2work_v1_landscape/i,
+    /back2work_v1_square/i,
+    /back2work_v1_long/i,
+  ])
   return [
-    makeSet('spinal-organic-social', 'Spinal Life Australia', [
-      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', media.filter((item) => item.type === 'image')),
-    ], undefined, { description: 'Organic Social' }),
+    makeSet('disability-support-at-home', 'Disability Support at Home', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', disabilityAtHome),
+    ], undefined, { description: 'Spinal Life Australia / Organic Social', layoutMode: 'campaign' }),
+    makeSet('ndis-disability-support-services', 'NDIS Disability Support Services', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', ndisSupport),
+    ], undefined, { description: 'Spinal Life Australia / Organic Social', layoutMode: 'campaign' }),
+    makeSet('return-to-work-or-study', 'Return to Work or Study', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', returnWorkStudy),
+    ], undefined, { description: 'Spinal Life Australia / Organic Social', layoutMode: 'campaign' }),
+    makeSet('career-pathways-with-back2work', 'Career Pathways with Back2Work', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', careerPathways),
+    ], undefined, { description: 'Spinal Life Australia / Organic Social', layoutMode: 'campaign' }),
+    makeSet('explore-back2work-after-injury', 'Explore Back2Work After Injury', [
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', exploreBack2Work),
+    ], undefined, { description: 'Spinal Life Australia / Organic Social', layoutMode: 'campaign' }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }
 
