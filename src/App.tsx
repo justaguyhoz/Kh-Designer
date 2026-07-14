@@ -42,7 +42,6 @@ function CategoryButton({ active, children, onClick }: { active: boolean; childr
 }
 
 function PortfolioExplorer() {
-  const [motionReady, setMotionReady] = useState(false)
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>(categoryFilters[0] ?? 'Social Ads')
 
   const categorySections = useMemo(() => categoryFilters
@@ -61,11 +60,9 @@ function PortfolioExplorer() {
     const items = document.querySelectorAll('.reveal-on-scroll')
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       items.forEach((item) => item.classList.add('is-visible'))
-      setMotionReady(false)
       return
     }
 
-    setMotionReady(true)
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (!entry.isIntersecting) return
@@ -79,90 +76,61 @@ function PortfolioExplorer() {
   }, [categorySections])
 
   useEffect(() => {
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduceMotion) return
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top))[0]
+      const category = visible?.target.getAttribute('data-category') as CategoryFilter | null
+      if (category) setActiveCategory(category)
+    }, { rootMargin: '-28% 0px -52% 0px', threshold: 0.08 })
 
-    let frame = 0
-    const clamp = (value: number) => Math.max(0, Math.min(1, value))
-    const update = () => {
-      frame = 0
-      const viewportHeight = window.innerHeight || 1
-      const anchor = viewportHeight * 0.42
-      const paper = document.querySelector<HTMLElement>('.paper-opening')
-      if (paper) {
-        const rect = paper.getBoundingClientRect()
-        const progress = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height * 0.35))
-        paper.style.setProperty('--paper-progress', progress.toFixed(3))
-      }
+    document.querySelectorAll('.category-section').forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [categorySections])
 
-      let current = activeCategory
-      document.querySelectorAll<HTMLElement>('.category-stage').forEach((stage) => {
-        const rect = stage.getBoundingClientRect()
-        const range = Math.max(1, rect.height - viewportHeight)
-        const progress = clamp((viewportHeight * 0.12 - rect.top) / range)
-        const stepCount = Number(stage.dataset.steps ?? 1)
-        const activeStep = Math.min(stepCount - 1, Math.max(0, Math.round(progress * Math.max(0, stepCount - 1))))
-        stage.style.setProperty('--stage-progress', progress.toFixed(4))
-        stage.style.setProperty('--track-shift', `${(progress * Math.max(0, stepCount - 1) * -100).toFixed(3)}%`)
-        stage.dataset.activeStep = String(activeStep + 1)
-        const counter = stage.querySelector<HTMLElement>('.stage-count span')
-        if (counter) counter.textContent = String(activeStep + 1).padStart(2, '0')
-        if (rect.top <= anchor && rect.bottom >= anchor) current = stage.dataset.category as CategoryFilter
-      })
-
-      setActiveCategory((value) => value === current ? value : current)
-    }
-    const requestUpdate = () => {
-      if (frame) return
-      frame = window.requestAnimationFrame(update)
-    }
-
-    update()
-    window.addEventListener('scroll', requestUpdate, { passive: true })
-    window.addEventListener('resize', requestUpdate)
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', requestUpdate)
-      window.removeEventListener('resize', requestUpdate)
-    }
-  }, [activeCategory, categorySections])
-
-  return <section className={motionReady ? 'work section scroll-work motion-ready' : 'work section scroll-work'} id="work">
-    <div className="scroll-experience">
-      <aside className="scroll-menu" aria-label="Scroll categories">
-        <p>Scroll Menu</p>
-        <nav>
-          {categorySections.map(({ category }) => <a
-            key={category}
-            className={activeCategory === category ? 'active' : undefined}
-            href={`#stage-${slugLabel(category)}`}
-            aria-current={activeCategory === category ? 'location' : undefined}
-          ><span>{category}</span></a>)}
-        </nav>
+  return <section className="work section carousel-work motion-ready" id="work">
+    <div className="portfolio-shell">
+      <aside className="side-rail" aria-label="Portfolio categories and profile">
+        <CategoryNavigation categories={categorySections.map(({ category }) => category)} activeCategory={activeCategory} />
+        <ProfileBlock compact />
       </aside>
-      <div className="experience-flow">
-        <section className="paper-opening reveal-on-scroll" aria-label="Portfolio opening concept">
-          <div className="folded-paper" aria-hidden="true">
-            <span className="paper-plane paper-plane-one">KH</span>
-            <span className="paper-plane paper-plane-two" />
-            <span className="paper-plane paper-plane-three" />
-            <span className="paper-plane paper-plane-four" />
-          </div>
-          <div>
-            <p className="eyebrow">From concept to channel</p>
-            <h2>Selected Work</h2>
-            <p>Brand, campaign and motion work.</p>
-          </div>
-        </section>
-        {categorySections.map(({ category, works }, index) => <CategoryStageScroll
-          key={category}
-          category={category}
-          works={works}
-          nextCategory={categorySections[index + 1]?.category}
-        />)}
+      <div className="portfolio-main">
+        <PortfolioIntro />
+        <CategoryNavigation categories={categorySections.map(({ category }) => category)} activeCategory={activeCategory} mobile />
+        {categorySections.map(({ category, works }) => <CategorySection key={category} category={category} works={works} />)}
       </div>
     </div>
   </section>
+}
+
+function PortfolioIntro() {
+  return <section className="portfolio-intro reveal-on-scroll" aria-label="Portfolio introduction">
+    <p className="eyebrow">Katty Hozavsky</p>
+    <h1>Senior Graphic Designer &amp; Social Media Creator</h1>
+    <p>Selected Work</p>
+  </section>
+}
+
+function CategoryNavigation({ categories, activeCategory, mobile = false }: { categories: CategoryFilter[]; activeCategory: CategoryFilter; mobile?: boolean }) {
+  return <nav className={mobile ? 'category-jump-nav mobile' : 'category-jump-nav'} aria-label="Portfolio categories">
+    {categories.map((category) => <a
+      key={category}
+      className={activeCategory === category ? 'active' : undefined}
+      href={`#section-${slugLabel(category)}`}
+      aria-current={activeCategory === category ? 'location' : undefined}
+    >{category}</a>)}
+  </nav>
+}
+
+function ProfileBlock({ compact = false }: { compact?: boolean }) {
+  return <div className={compact ? 'profile-block compact' : 'profile-block'}>
+    <p className="profile-name">Katty Hozavsky</p>
+    <p>Senior Graphic Designer &amp; Social Media Creator</p>
+    <p className="profile-label">About</p>
+    <p>Senior Graphic Designer and Creative Marketing Manager creating brand, campaign, digital, print and social work.</p>
+    <p className="profile-label">Contact</p>
+    <a href="mailto:justakatty@gmail.com">justakatty@gmail.com</a>
+  </div>
 }
 
 function categoryStageCopy(category: CategoryFilter) {
@@ -190,6 +158,141 @@ function categoryStageCopy(category: CategoryFilter) {
   }
 
   return copy[category] ?? { title: category, description: '' }
+}
+
+function CategorySection({ category, works }: { category: CategoryFilter; works: Array<{ project: PortfolioProject; set: PortfolioCreativeSet }> }) {
+  const stage = categoryStageCopy(category)
+  const slug = slugLabel(category)
+  return <section id={`section-${slug}`} className={`category-section section-${slug}`} data-category={category} aria-labelledby={`section-${slug}-title`}>
+    <div className="category-heading reveal-on-scroll">
+      <p className="eyebrow">{category}</p>
+      <h2 id={`section-${slug}-title`}>{stage.title}</h2>
+      <p>{stage.description}</p>
+    </div>
+    <WorkCarousel category={category} works={works} />
+  </section>
+}
+
+function WorkCarousel({ category, works }: { category: CategoryFilter; works: Array<{ project: PortfolioProject; set: PortfolioCreativeSet }> }) {
+  const [activeIndex, setActiveIndex] = useState(0)
+  const active = works[activeIndex] ?? works[0]
+  const total = works.length
+  const goPrevious = () => setActiveIndex((index) => Math.max(0, index - 1))
+  const goNext = () => setActiveIndex((index) => Math.min(total - 1, index + 1))
+
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [category])
+
+  if (!active) return null
+
+  return <div
+    className="work-viewer reveal-on-scroll"
+    tabIndex={0}
+    onKeyDown={(event) => {
+      if (event.key === 'ArrowLeft') goPrevious()
+      if (event.key === 'ArrowRight') goNext()
+    }}
+    aria-label={`${category} work viewer`}
+  >
+    <div className="viewer-topline">
+      <p className="viewer-count" aria-live="polite">{String(activeIndex + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</p>
+      <div className="carousel-controls">
+        <button type="button" onClick={goPrevious} disabled={activeIndex === 0} aria-label={`Previous ${category} work`}>← Previous</button>
+        <button type="button" onClick={goNext} disabled={activeIndex === total - 1} aria-label={`Next ${category} work`}>Next →</button>
+      </div>
+    </div>
+    <WorkSlide category={category} project={active.project} set={active.set} />
+  </div>
+}
+
+function WorkSlide({ category, project, set }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet }) {
+  const descriptor = set.description ?? (project.title !== set.title ? project.title : undefined)
+  return <article className={`work-slide frame-${slugLabel(category)}`} aria-labelledby={`${project.id}-${set.id}-slide-title`}>
+    <div className="slide-copy">
+      {project.client !== set.title && <p className="eyebrow">{project.client}</p>}
+      <h3 id={`${project.id}-${set.id}-slide-title`}>{set.title}</h3>
+      {descriptor && <p className="work-description">{descriptor}</p>}
+      <ProjectIntelligence category={category} project={project} set={set} descriptor={descriptor} />
+    </div>
+    <CategoryFrame category={category} project={project} set={set} />
+  </article>
+}
+
+function ProjectIntelligence({ category, project, set, descriptor }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet; descriptor?: string }) {
+  const message = set.context?.[0] ?? set.creativeDirection?.messaging?.[0]
+  const fields: Array<{ label: string; value: string }> = [
+    { label: 'Client', value: project.client },
+  ]
+
+  if (message && message !== set.title) fields.push({ label: category === 'Magazine Ads' ? 'Key message' : 'Message', value: message })
+  if (descriptor && descriptor !== set.title) fields.push({ label: category === 'Branding' ? 'Deliverable' : 'Type of work', value: descriptor })
+  if (category === 'Branding' && !descriptor) fields.push({ label: 'System', value: project.title })
+  if (category === 'Video') fields.push({ label: 'Format', value: 'Video' })
+
+  const palette = paletteForWork(project.client, set.title)
+
+  return <aside className="project-intelligence" aria-label="Project details">
+    {fields.slice(0, 3).map((field) => <div key={field.label}>
+      <span>{field.label}</span>
+      <p>{field.value}</p>
+    </div>)}
+    {palette.length > 0 && <div>
+      <span>Selected palette</span>
+      <p className="palette-row">{palette.map((color) => <i key={color} style={{ background: color }} />)}</p>
+    </div>}
+  </aside>
+}
+
+function paletteForWork(client: string, title: string) {
+  if (client === 'Charlii') return ['#f0b6bd', '#f7ded8', '#7b2e35', '#2b090c']
+  if (client === 'Powertec') return ['#111111', '#1c5b9e', '#f2a21b', '#f4f4f0']
+  if (title.includes('Orange')) return ['#f15a24', '#111111', '#ffffff', '#f2efe8']
+  if (client === 'United Nations') return ['#111111', '#f1c232', '#ffffff', '#2f5f85']
+  return []
+}
+
+function CategoryFrame({ category, project, set }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet }) {
+  const group = set.mediaGroups[0]
+  if (!group) return null
+  const media = group.media
+  const frameClass = `category-frame ${presentationFor(category, media.length)}`
+
+  if (category === 'Video') {
+    const activeVideo = media[0]
+    if (!activeVideo) return null
+    return <div className={frameClass}>
+      <MediaFrame media={activeVideo} className="outlet-video active-video" />
+    </div>
+  }
+
+  return <div className={frameClass}>
+    <div className="media-grid">
+      {media.slice(0, maxMediaFor(category)).map((item, index) => <MediaFrame key={item.id} media={item} className={`${outletClassFor(category)} media-slot-${index + 1}`} />)}
+    </div>
+  </div>
+}
+
+function maxMediaFor(category: CategoryFilter) {
+  if (category === 'Social Ads') return 3
+  if (category === 'Organic Social') return 3
+  if (category === 'Magazine Ads') return 2
+  if (category === 'Branding') return 4
+  return 1
+}
+
+function presentationFor(category: CategoryFilter, count: number) {
+  if (category === 'Social Ads') return count > 1 ? 'presentation-lead-support' : 'presentation-single'
+  if (category === 'Organic Social') return 'presentation-profile'
+  if (category === 'Magazine Ads') return 'presentation-magazine'
+  if (category === 'Branding') return count > 1 ? 'presentation-board' : 'presentation-single'
+  if (category === 'Video') return 'presentation-video'
+  return 'presentation-single'
+}
+
+function outletClassFor(category: CategoryFilter) {
+  const discipline = filterDisciplines[category]
+  return discipline ? `outlet-${discipline}` : ''
 }
 
 function CategoryStageScroll({ category, works, nextCategory }: { category: CategoryFilter; works: Array<{ project: PortfolioProject; set: PortfolioCreativeSet }>; nextCategory?: CategoryFilter }) {
