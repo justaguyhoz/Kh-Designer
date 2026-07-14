@@ -19,13 +19,17 @@ import {
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const items = ['Work', 'About', 'Contact']
+  const items = [
+    { label: 'Work', href: '#work' },
+    { label: 'About', href: '#about' },
+    { label: 'Contact', href: '#contact' },
+  ]
 
   return <header className="site-header">
     <a className="brand" href="#top" aria-label="Katty Hozavsky home"><span>KH</span><small>Designer</small></a>
     <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="main-nav">{menuOpen ? 'Close' : 'Menu'}</button>
     <nav id="main-nav" className={menuOpen ? 'main-nav open' : 'main-nav'} aria-label="Main navigation">
-      {items.map((label) => <a key={label} href={`#${label.toLowerCase()}`} onClick={() => setMenuOpen(false)}>{label}</a>)}
+      {items.map((item) => <a key={item.label} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>)}
     </nav>
   </header>
 }
@@ -95,8 +99,6 @@ function PortfolioExplorer() {
         <ProfileBlock compact />
       </aside>
       <div className="portfolio-main">
-        <PortfolioIntro />
-        <CategoryNavigation categories={categorySections.map(({ category }) => category)} activeCategory={activeCategory} mobile />
         {categorySections.map(({ category, works }) => <CategorySection key={category} category={category} works={works} />)}
       </div>
     </div>
@@ -126,35 +128,20 @@ function ProfileBlock({ compact = false }: { compact?: boolean }) {
   return <div className={compact ? 'profile-block compact' : 'profile-block'}>
     <p className="profile-name">Katty Hozavsky</p>
     <p>Senior Graphic Designer &amp; Social Media Creator</p>
-    <p className="profile-label">About</p>
-    <p>Senior Graphic Designer and Creative Marketing Manager creating brand, campaign, digital, print and social work.</p>
-    <p className="profile-label">Contact</p>
+    <p className="profile-label" id="about">About</p>
+    <p>I'm a Senior Graphic Designer and Creative Marketing Manager with over a decade of experience creating visually compelling campaigns across Australia and internationally. I combine strong design expertise with hands-on social media and digital marketing experience, leading projects from concept to execution that drive engagement and results. At Powertec Telecommunications and Outback Marine, I oversee creative direction, content creation, video production, packaging design, and major campaigns, connecting creativity with business goals. I'm passionate about turning ideas into impactful visuals and strategies that resonate with audiences.</p>
+    <p className="profile-label" id="contact">Contact</p>
     <a href="mailto:justakatty@gmail.com">justakatty@gmail.com</a>
   </div>
 }
 
 function categoryStageCopy(category: CategoryFilter) {
   const copy: Record<string, { title: string; description: string }> = {
-    'Social Ads': {
-      title: 'Phone-first campaign moments',
-      description: 'Paid social work sits inside device-led frames, giving campaign assets the context they were designed for.',
-    },
-    'Organic Social': {
-      title: 'Organic social systems',
-      description: 'Feed work is treated as a social environment rather than isolated thumbnails.',
-    },
-    'Magazine Ads': {
-      title: 'Paper opened flat',
-      description: 'Print campaigns live on a creased editorial sheet with room to move through each ad.',
-    },
-    Branding: {
-      title: 'Brand systems and surfaces',
-      description: 'Identity work stays clean and tactile, like boards laid out on a studio table.',
-    },
-    Video: {
-      title: 'Motion on screen',
-      description: 'Video work moves into a darker player space with controls kept visible and usable.',
-    },
+    'Social Ads': { title: 'Social Ads', description: '' },
+    'Organic Social': { title: 'Organic Social', description: '' },
+    'Magazine Ads': { title: 'Magazine Ads', description: '' },
+    Branding: { title: 'Branding', description: '' },
+    Video: { title: 'Video', description: '' },
   }
 
   return copy[category] ?? { title: category, description: '' }
@@ -167,7 +154,7 @@ function CategorySection({ category, works }: { category: CategoryFilter; works:
     <div className="category-heading reveal-on-scroll">
       <p className="eyebrow">{category}</p>
       <h2 id={`section-${slug}-title`}>{stage.title}</h2>
-      <p>{stage.description}</p>
+      {stage.description && <p>{stage.description}</p>}
     </div>
     <WorkCarousel category={category} works={works} />
   </section>
@@ -221,13 +208,14 @@ function WorkSlide({ category, project, set }: { category: CategoryFilter; proje
 
 function ProjectIntelligence({ category, project, set, descriptor }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet; descriptor?: string }) {
   const message = set.context?.[0] ?? set.creativeDirection?.messaging?.[0]
-  const fields: Array<{ label: string; value: string }> = [
-    { label: 'Client', value: project.client },
-  ]
+  const fields: Array<{ label: string; value: string }> = [{ label: 'Client', value: project.client }]
+  const extra = projectSpecificFields(category, project, set)
 
   if (message && message !== set.title) fields.push({ label: category === 'Magazine Ads' ? 'Key message' : 'Message', value: message })
   if (descriptor && descriptor !== set.title) fields.push({ label: category === 'Branding' ? 'Deliverable' : 'Type of work', value: descriptor })
-  if (category === 'Branding' && !descriptor) fields.push({ label: 'System', value: project.title })
+  extra.forEach((field) => {
+    if (!fields.some((item) => item.label === field.label || item.value === field.value)) fields.push(field)
+  })
   if (category === 'Video') fields.push({ label: 'Format', value: 'Video' })
 
   const palette = paletteForWork(project.client, set.title)
@@ -244,6 +232,30 @@ function ProjectIntelligence({ category, project, set, descriptor }: { category:
   </aside>
 }
 
+function projectSpecificFields(category: CategoryFilter, project: PortfolioProject, set: PortfolioCreativeSet) {
+  const fields: Array<{ label: string; value: string }> = []
+  if (category === 'Organic Social') {
+    if (project.client === 'Kean') fields.push({ label: 'Content focus', value: 'Project delivery and construction updates' })
+    if (project.client === 'Spinal Life Australia') fields.push({ label: 'Service', value: set.title })
+    if (project.client === 'The Brooklyn') fields.push({ label: 'Platform', value: 'Organic social profile content' })
+    if (project.client === 'The Sycamore School') fields.push({ label: 'Campaign', value: 'This is Sycamore' })
+    if (project.client === 'Vetner') fields.push({ label: 'Deliverable', value: 'Organic social content' })
+  }
+  if (category === 'Magazine Ads') {
+    if (project.client === 'United Nations') fields.push({ label: 'Campaign', value: 'COVID-19 Campaign' }, { label: 'Format', value: 'Print campaign' })
+    if (project.client === 'Powertec') fields.push({ label: 'Campaign', value: 'R41' })
+    if (project.client === 'Audi') fields.push({ label: 'Format', value: 'Magazine ad' })
+  }
+  if (category === 'Branding') {
+    if (set.title === 'TAC') fields.push({ label: 'Deliverables', value: 'T-shirt, artwork and event identity' })
+    if (set.title === 'Orange Amplifiers') fields.push({ label: 'Deliverable', value: 'Brand guide and social system' })
+    if (project.client === 'Faceit Graphix') fields.push({ label: 'Deliverable', value: 'Brand identity and vehicle wrap' })
+    if (set.title === 'Elemental Studio') fields.push({ label: 'System', value: 'Logo and business cards' })
+    if (set.title === 'WatchAI') fields.push({ label: 'Deliverable', value: 'Branding and packaging' })
+  }
+  return fields
+}
+
 function paletteForWork(client: string, title: string) {
   if (client === 'Charlii') return ['#f0b6bd', '#f7ded8', '#7b2e35', '#2b090c']
   if (client === 'Powertec') return ['#111111', '#1c5b9e', '#f2a21b', '#f4f4f0']
@@ -253,36 +265,57 @@ function paletteForWork(client: string, title: string) {
 }
 
 function CategoryFrame({ category, project, set }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet }) {
+  const [mediaIndex, setMediaIndex] = useState(0)
+  useEffect(() => {
+    setMediaIndex(0)
+  }, [project.id, set.id, category])
+
   const group = set.mediaGroups[0]
   if (!group) return null
   const media = group.media
-  const frameClass = `category-frame ${presentationFor(category, media.length)}`
+  const activeMedia = media[Math.min(mediaIndex, media.length - 1)]
+  const isAllDay = project.client === 'All Day Workwear'
+  const frameClass = `category-frame ${presentationFor(category, media.length, project.client, set.title)}`
 
   if (category === 'Video') {
-    const activeVideo = media[0]
-    if (!activeVideo) return null
+    if (!activeMedia) return null
     return <div className={frameClass}>
-      <MediaFrame media={activeVideo} className="outlet-video active-video" />
+      <MediaFrame media={activeMedia} className="outlet-video active-video" />
+      <MediaPager media={media} mediaIndex={mediaIndex} setMediaIndex={setMediaIndex} />
     </div>
   }
 
-  return <div className={frameClass}>
-    <div className="media-grid">
-      {media.slice(0, maxMediaFor(category)).map((item, index) => <MediaFrame key={item.id} media={item} className={`${outletClassFor(category)} media-slot-${index + 1}`} />)}
+  if (isAllDay && media.length > 1) {
+    return <div className={frameClass}>
+      <div className="media-grid equal-pair">
+        {media.slice(0, 2).map((item, index) => <MediaFrame key={item.id} media={item} className={`${outletClassFor(category, project.client)} media-slot-${index + 1}`} />)}
+      </div>
     </div>
+  }
+
+  if (!activeMedia) return null
+
+  return <div className={frameClass}>
+    <div className="media-grid media-main-grid">
+      <MediaFrame media={activeMedia} className={`${outletClassFor(category, project.client)} media-slot-1`} />
+    </div>
+    <MediaPager media={media} mediaIndex={mediaIndex} setMediaIndex={setMediaIndex} />
   </div>
 }
 
-function maxMediaFor(category: CategoryFilter) {
-  if (category === 'Social Ads') return 3
-  if (category === 'Organic Social') return 3
-  if (category === 'Magazine Ads') return 2
-  if (category === 'Branding') return 4
-  return 1
+function MediaPager({ media, mediaIndex, setMediaIndex }: { media: PortfolioMedia[]; mediaIndex: number; setMediaIndex: (updater: (index: number) => number) => void }) {
+  if (media.length <= 1) return null
+  return <div className="media-pager" aria-label="Project media controls">
+    <button type="button" onClick={() => setMediaIndex((index) => Math.max(0, index - 1))} disabled={mediaIndex === 0} aria-label="Previous media">‹ Media</button>
+    <span>{mediaIndex + 1} / {media.length}</span>
+    <button type="button" onClick={() => setMediaIndex((index) => Math.min(media.length - 1, index + 1))} disabled={mediaIndex === media.length - 1} aria-label="Next media">Media ›</button>
+  </div>
 }
 
-function presentationFor(category: CategoryFilter, count: number) {
-  if (category === 'Social Ads') return count > 1 ? 'presentation-lead-support' : 'presentation-single'
+function presentationFor(category: CategoryFilter, count: number, client: string, title: string) {
+  if (client === 'Outback Marine' || title === 'Outback Marine') return 'presentation-panorama'
+  if (client === 'All Day Workwear') return 'presentation-equal-pair'
+  if (category === 'Social Ads') return 'presentation-single'
   if (category === 'Organic Social') return 'presentation-profile'
   if (category === 'Magazine Ads') return 'presentation-magazine'
   if (category === 'Branding') return count > 1 ? 'presentation-board' : 'presentation-single'
@@ -290,7 +323,8 @@ function presentationFor(category: CategoryFilter, count: number) {
   return 'presentation-single'
 }
 
-function outletClassFor(category: CategoryFilter) {
+function outletClassFor(category: CategoryFilter, client?: string) {
+  if (client === 'Powertec') return ''
   const discipline = filterDisciplines[category]
   return discipline ? `outlet-${discipline}` : ''
 }
@@ -550,10 +584,7 @@ function App() {
   return <>
     <Header />
     <main>
-      <Hero />
       <PortfolioExplorer />
-      <AboutExperience />
-      <ContactExperience />
     </main>
     <FooterExperience />
     <footer hidden>

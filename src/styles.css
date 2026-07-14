@@ -401,14 +401,55 @@ footer { min-height: 86px; padding: 24px clamp(18px, 4vw, 52px); display: flex; 
 .frame-magazine-ads { background: #fffaf4; }
 .carousel-work .paper-opening, .carousel-work .paper-origin, .carousel-work .category-scroll-spacer, .carousel-work .stage-sticky, .carousel-work .stage-surface, .carousel-work .stage-progress, .carousel-work .stage-count, .carousel-work .sequence-track { all: unset; }
 
+.carousel-work .portfolio-main { gap: clamp(42px, 6vw, 92px); }
+.carousel-work .category-section { min-height: min(880px, calc(100vh - 84px)); align-content: start; }
+.carousel-work .category-heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; max-width: none; padding-bottom: 10px; border-bottom: 1px solid rgba(236,209,207,.78); }
+.carousel-work .category-heading .eyebrow { margin: 0; }
+.carousel-work .category-heading h2 { font-size: clamp(24px, 3.2vw, 44px); }
+.carousel-work .work-viewer { gap: 12px; }
+.carousel-work .work-slide { min-height: min(740px, calc(100vh - 190px)); grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); gap: clamp(14px, 2vw, 24px); padding: clamp(16px, 2vw, 28px); }
+.carousel-work .slide-copy { display: grid; grid-template-columns: minmax(180px, 1.2fr) minmax(0, 2fr); gap: clamp(14px, 2vw, 28px); align-items: start; }
+.carousel-work .slide-copy h3 { font-size: clamp(28px, 3.8vw, 60px); }
+.carousel-work .slide-copy > .work-description { align-self: end; margin-top: 0; }
+.carousel-work .project-intelligence { margin-top: 0; padding-top: 0; border-top: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: start; }
+.carousel-work .category-frame { min-height: 0; display: grid; gap: 10px; align-self: stretch; }
+.carousel-work .category-frame .media-grid { min-height: 0; max-height: none; height: 100%; }
+.carousel-work .category-frame .media-main-grid { display: grid; place-items: center; }
+.carousel-work .category-frame .media-main-grid .media-frame { grid-column: 1 / -1; width: min(100%, 1180px); justify-self: center; }
+.carousel-work .category-frame .media-frame img, .carousel-work .category-frame .media-frame video { max-height: min(61vh, 680px); width: 100%; object-fit: contain; }
+.carousel-work .media-pager { display: flex; justify-content: center; align-items: center; gap: 16px; color: var(--muted); font-family: Arial, Helvetica, sans-serif; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.carousel-work .media-pager button { padding: 6px 0; border: 0; border-bottom: 1px solid currentColor; background: transparent; color: var(--ink); cursor: pointer; font: inherit; }
+.carousel-work .media-pager button:disabled { color: rgba(125,96,96,.42); cursor: default; }
+.carousel-work .presentation-panorama { padding: clamp(10px, 1.5vw, 18px); border-radius: 24px; background: linear-gradient(145deg, rgba(255,250,247,.88), rgba(255,255,255,.58)); box-shadow: 0 18px 48px rgba(64,31,31,.1); }
+.carousel-work .presentation-panorama .media-main-grid .media-frame { width: 100%; border: 0; border-radius: 18px; background: transparent; box-shadow: none; }
+.carousel-work .presentation-panorama .media-frame img { max-height: min(56vh, 620px); }
+.carousel-work .presentation-equal-pair .equal-pair { display: flex; align-items: stretch; justify-content: center; gap: clamp(12px, 2vw, 24px); }
+.carousel-work .presentation-equal-pair .media-frame { flex: 1 1 0; display: grid; align-items: center; min-width: 0; }
+.carousel-work .presentation-equal-pair .media-frame img { height: min(58vh, 650px); width: 100%; object-fit: contain; }
+.carousel-work .presentation-magazine { min-height: min(68vh, 720px); display: grid; align-content: center; }
+.carousel-work .presentation-magazine .media-main-grid .media-frame { width: min(100%, 980px); }
+.carousel-work .presentation-magazine .media-frame img { max-height: min(63vh, 700px); }
+.carousel-work .presentation-board .media-main-grid .media-frame { width: min(100%, 1080px); }
+.carousel-work .presentation-board .media-frame img { max-height: min(62vh, 700px); }
+.carousel-work .presentation-profile .media-main-grid .media-frame { width: min(100%, 940px); }
+.carousel-work .frame-social-ads .outlet-social-ads, .carousel-work .frame-organic-social .outlet-organic-social { padding: 0; border: 0; border-radius: 18px; background: transparent; box-shadow: none; }
+.carousel-work .frame-social-ads .outlet-social-ads::before, .carousel-work .frame-organic-social .outlet-organic-social::before { display: none; }
+.carousel-work .frame-social-ads .outlet-social-ads img, .carousel-work .frame-organic-social .outlet-organic-social img { border-radius: 16px; }
+
 @media (max-width: 1100px) {
   .carousel-work .portfolio-shell { grid-template-columns: 1fr; }
-  .carousel-work .side-rail { display: none; }
+  .carousel-work .side-rail { position: static; display: grid; gap: 18px; }
   .carousel-work .category-jump-nav.mobile { position: sticky; top: 62px; z-index: 8; margin-inline: -18px; padding: 10px 18px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; border: 0; background: rgba(251,243,240,.96); border-block: 1px solid rgba(236,209,207,.78); backdrop-filter: blur(16px); }
+  .carousel-work .side-rail > .category-jump-nav:not(.mobile) { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding-left: 0; border-left: 0; }
+  .carousel-work .side-rail > .category-jump-nav:not(.mobile) a { padding: 8px 6px; border: 1px solid rgba(236,209,207,.9); border-radius: 999px; text-align: center; font-size: 9px; line-height: 1.1; background: rgba(255,250,247,.72); }
+  .carousel-work .side-rail > .category-jump-nav:not(.mobile) a::before { display: none; }
+  .carousel-work .side-rail > .category-jump-nav:not(.mobile) a.active { color: #fff; border-color: var(--ink); background: var(--ink); }
   .carousel-work .category-jump-nav.mobile a { padding: 8px 6px; border: 1px solid rgba(236,209,207,.9); border-radius: 999px; text-align: center; font-size: 9px; line-height: 1.1; background: rgba(255,250,247,.72); }
   .carousel-work .category-jump-nav.mobile a::before { display: none; }
   .carousel-work .category-jump-nav.mobile a.active { color: #fff; border-color: var(--ink); background: var(--ink); }
   .carousel-work .work-slide { min-height: 0; grid-template-columns: 1fr; align-items: start; }
+  .carousel-work .slide-copy { grid-template-columns: 1fr; }
+  .carousel-work .project-intelligence { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .carousel-work .category-frame .media-grid { max-height: none; }
   .carousel-work .category-frame .media-frame img, .carousel-work .category-frame .media-frame video { max-height: none; }
   .carousel-work .presentation-lead-support .media-frame:first-child, .carousel-work .presentation-lead-support .media-frame:nth-child(2), .carousel-work .presentation-lead-support .media-frame:nth-child(3), .carousel-work .presentation-board .media-frame:first-child, .carousel-work .presentation-board .media-frame:nth-child(2), .carousel-work .presentation-board .media-frame:nth-child(n+3), .carousel-work .presentation-profile .media-frame:first-child, .carousel-work .presentation-profile .media-frame:nth-child(n+2), .carousel-work .presentation-magazine .media-frame, .carousel-work .presentation-magazine .media-frame:first-child:last-child { grid-column: 1 / -1; width: 100%; }
@@ -418,8 +459,11 @@ footer { min-height: 86px; padding: 24px clamp(18px, 4vw, 52px); display: flex; 
   .carousel-work .portfolio-main { gap: 36px; }
   .carousel-work .portfolio-intro h1 { font-size: clamp(30px, 9vw, 43px); }
   .carousel-work .category-jump-nav.mobile { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-inline: -14px; padding-inline: 14px; }
+  .carousel-work .side-rail > .category-jump-nav:not(.mobile) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .carousel-work .viewer-topline { align-items: flex-start; flex-direction: column; gap: 10px; }
   .carousel-work .carousel-controls { width: 100%; justify-content: space-between; }
   .carousel-work .work-slide { padding: 16px 12px; border-radius: 20px; }
   .carousel-work .project-intelligence { grid-template-columns: 1fr; gap: 10px; }
+  .carousel-work .presentation-equal-pair .equal-pair { flex-direction: column; }
+  .carousel-work .presentation-equal-pair .media-frame img { height: auto; max-height: none; }
 }
