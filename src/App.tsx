@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import {
   allCategoryFilters,
   categoryFilters,
@@ -43,6 +43,7 @@ function CategoryButton({ active, children, onClick }: { active: boolean; childr
 
 function PortfolioExplorer() {
   const [motionReady, setMotionReady] = useState(false)
+  const [activeCategory, setActiveCategory] = useState<CategoryFilter>(categoryFilters[0] ?? 'Social Ads')
 
   const categorySections = useMemo(() => categoryFilters
     .map((category) => {
@@ -77,23 +78,83 @@ function PortfolioExplorer() {
     return () => observer.disconnect()
   }, [categorySections])
 
+  useEffect(() => {
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) return
+
+    let frame = 0
+    const clamp = (value: number) => Math.max(0, Math.min(1, value))
+    const update = () => {
+      frame = 0
+      const viewportHeight = window.innerHeight || 1
+      const anchor = viewportHeight * 0.42
+      const paper = document.querySelector<HTMLElement>('.paper-opening')
+      if (paper) {
+        const rect = paper.getBoundingClientRect()
+        const progress = clamp((viewportHeight - rect.top) / (viewportHeight + rect.height * 0.35))
+        paper.style.setProperty('--paper-progress', progress.toFixed(3))
+      }
+
+      let current = activeCategory
+      document.querySelectorAll<HTMLElement>('.category-stage').forEach((stage) => {
+        const rect = stage.getBoundingClientRect()
+        const range = Math.max(1, rect.height - viewportHeight)
+        const progress = clamp((viewportHeight * 0.12 - rect.top) / range)
+        const stepCount = Number(stage.dataset.steps ?? 1)
+        const activeStep = Math.min(stepCount - 1, Math.max(0, Math.round(progress * Math.max(0, stepCount - 1))))
+        stage.style.setProperty('--stage-progress', progress.toFixed(4))
+        stage.style.setProperty('--track-shift', `${(progress * Math.max(0, stepCount - 1) * -100).toFixed(3)}%`)
+        stage.dataset.activeStep = String(activeStep + 1)
+        const counter = stage.querySelector<HTMLElement>('.stage-count span')
+        if (counter) counter.textContent = String(activeStep + 1).padStart(2, '0')
+        if (rect.top <= anchor && rect.bottom >= anchor) current = stage.dataset.category as CategoryFilter
+      })
+
+      setActiveCategory((value) => value === current ? value : current)
+    }
+    const requestUpdate = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(update)
+    }
+
+    update()
+    window.addEventListener('scroll', requestUpdate, { passive: true })
+    window.addEventListener('resize', requestUpdate)
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', requestUpdate)
+      window.removeEventListener('resize', requestUpdate)
+    }
+  }, [activeCategory, categorySections])
+
   return <section className={motionReady ? 'work section scroll-work motion-ready' : 'work section scroll-work'} id="work">
     <div className="scroll-experience">
       <aside className="scroll-menu" aria-label="Scroll categories">
         <p>Scroll Menu</p>
         <nav>
-          {categorySections.map(({ category }) => <a key={category} href={`#stage-${slugLabel(category)}`}>{category}</a>)}
+          {categorySections.map(({ category }) => <a
+            key={category}
+            className={activeCategory === category ? 'active' : undefined}
+            href={`#stage-${slugLabel(category)}`}
+            aria-current={activeCategory === category ? 'location' : undefined}
+          ><span>{category}</span></a>)}
         </nav>
       </aside>
       <div className="experience-flow">
-        <section className="paper-origin reveal-on-scroll" aria-label="Portfolio opening concept">
-          <div className="paper-ball" aria-hidden="true"><span /></div>
+        <section className="paper-opening reveal-on-scroll" aria-label="Portfolio opening concept">
+          <div className="folded-paper" aria-hidden="true">
+            <span className="paper-plane paper-plane-one">KH</span>
+            <span className="paper-plane paper-plane-two" />
+            <span className="paper-plane paper-plane-three" />
+            <span className="paper-plane paper-plane-four" />
+          </div>
           <div>
             <p className="eyebrow">From concept to channel</p>
-            <h2>A crumpled idea opens into print, moves through social, and lands in motion.</h2>
+            <h2>Selected Work</h2>
+            <p>Brand, campaign and motion work.</p>
           </div>
         </section>
-        {categorySections.map(({ category, works }, index) => <CategoryStage
+        {categorySections.map(({ category, works }, index) => <CategoryStageScroll
           key={category}
           category={category}
           works={works}
@@ -129,6 +190,45 @@ function categoryStageCopy(category: CategoryFilter) {
   }
 
   return copy[category] ?? { title: category, description: '' }
+}
+
+function CategoryStageScroll({ category, works, nextCategory }: { category: CategoryFilter; works: Array<{ project: PortfolioProject; set: PortfolioCreativeSet }>; nextCategory?: CategoryFilter }) {
+  const stage = categoryStageCopy(category)
+  const slug = slugLabel(category)
+  const stepCount = works.length
+
+  return <section
+    id={`stage-${slug}`}
+    className={`category-stage stage-${slug}`}
+    aria-labelledby={`stage-${slug}-title`}
+    data-category={category}
+    data-steps={stepCount}
+    style={{ '--steps': stepCount } as CSSProperties}
+  >
+    <div className="category-scroll-spacer">
+      <div className="stage-sticky">
+        <div className="stage-intro reveal-on-scroll">
+          <p className="eyebrow">{category}</p>
+          <h2 id={`stage-${slug}-title`}>{stage.title}</h2>
+          <p>{stage.description}</p>
+        </div>
+        <div className="stage-surface">
+          <div className="stage-progress" aria-hidden="true"><span /></div>
+          <p className="stage-count"><span>01</span> / {String(stepCount).padStart(2, '0')}</p>
+          <div className="sequence-track">
+            {works.map(({ project, set }, index) => <div
+              className="sequence-step"
+              key={`${category}-${project.id}-${set.id}`}
+              style={{ '--step-index': index } as CSSProperties}
+            >
+              <WorkShowcase project={project} set={set} />
+            </div>)}
+          </div>
+        </div>
+        {nextCategory && <a className="stage-next" href={`#stage-${slugLabel(nextCategory)}`}>Next: {nextCategory} &rarr;</a>}
+      </div>
+    </div>
+  </section>
 }
 
 function CategoryStage({ category, works, nextCategory }: { category: CategoryFilter; works: Array<{ project: PortfolioProject; set: PortfolioCreativeSet }>; nextCategory?: CategoryFilter }) {
