@@ -375,9 +375,21 @@ function buildSycamore(media: PortfolioMedia[]) {
 }
 
 function buildVetner(media: PortfolioMedia[]) {
+  const selected = orderedBy(media.filter((item) => item.type === 'image'), [
+    'Vetner_organic-posts_April_1.jpg',
+    'Vetner_organic-posts_April_3.jpg',
+    'Cargo-Nets_1.jpg',
+    'remarketing/PVTL_Concreters_Traffic_remarketing-2.jpg',
+    'Vetner_organic-posts_April_5.jpg',
+    'Cargo-Nets_1_long.jpg',
+    'remarketing/PVTL_Concreters_Traffic_remarketing-1_long.jpg',
+    'Cargo-Nets_2_landscape.jpg',
+    'remarketing/PVTL_Concreters_Traffic_remarketing-3_landscape.jpg',
+    'Cargo-Nets_1_landscape.jpg',
+  ])
   return [
     makeSet('vetner-organic-social', 'Vetner', [
-      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', media.filter((item) => item.type === 'image')),
+      makeGroup('organic-social', 'ORGANIC SOCIAL', 'organic-social', selected),
     ], undefined, { description: 'Organic Social', layoutMode: 'campaign' }),
   ].filter(Boolean) as PortfolioCreativeSet[]
 }

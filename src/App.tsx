@@ -185,8 +185,8 @@ function WorkCarousel({ category, works }: { category: CategoryFilter; works: Ar
     <div className="viewer-topline">
       <p className="viewer-count" aria-live="polite">{String(activeIndex + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</p>
       <div className="carousel-controls">
-        <button type="button" onClick={goPrevious} disabled={activeIndex === 0} aria-label={`Previous ${category} work`}>← Previous</button>
-        <button type="button" onClick={goNext} disabled={activeIndex === total - 1} aria-label={`Next ${category} work`}>Next →</button>
+        <button type="button" onClick={goPrevious} disabled={activeIndex === 0} aria-label={`Previous ${category} project`}>← Previous Project</button>
+        <button type="button" onClick={goNext} disabled={activeIndex === total - 1} aria-label={`Next ${category} project`}>Next Project →</button>
       </div>
     </div>
     <WorkSlide category={category} project={active.project} set={active.set} />
@@ -197,7 +197,7 @@ function WorkSlide({ category, project, set }: { category: CategoryFilter; proje
   const descriptor = set.description ?? (project.title !== set.title ? project.title : undefined)
   return <article className={`work-slide frame-${slugLabel(category)}`} aria-labelledby={`${project.id}-${set.id}-slide-title`}>
     <div className="slide-copy">
-      {project.client !== set.title && <p className="eyebrow">{project.client}</p>}
+      <p className="eyebrow">{project.client}</p>
       <h3 id={`${project.id}-${set.id}-slide-title`}>{set.title}</h3>
       {descriptor && <p className="work-description">{descriptor}</p>}
       <ProjectIntelligence category={category} project={project} set={set} descriptor={descriptor} />
@@ -212,16 +212,18 @@ function ProjectIntelligence({ category, project, set, descriptor }: { category:
   const extra = projectSpecificFields(category, project, set)
 
   if (message && message !== set.title) fields.push({ label: category === 'Magazine Ads' ? 'Key message' : 'Message', value: message })
-  if (descriptor && descriptor !== set.title) fields.push({ label: category === 'Branding' ? 'Deliverable' : 'Type of work', value: descriptor })
   extra.forEach((field) => {
     if (!fields.some((item) => item.label === field.label || item.value === field.value)) fields.push(field)
   })
+  if (descriptor && descriptor !== set.title && !fields.some((item) => item.value === descriptor)) {
+    fields.push({ label: category === 'Branding' ? 'Deliverable' : 'Type of work', value: descriptor })
+  }
   if (category === 'Video') fields.push({ label: 'Format', value: 'Video' })
 
   const palette = paletteForWork(project.client, set.title)
 
   return <aside className="project-intelligence" aria-label="Project details">
-    {fields.slice(0, 3).map((field) => <div key={field.label}>
+    {fields.slice(0, 3).map((field) => <div key={`${field.label}-${field.value}`}>
       <span>{field.label}</span>
       <p>{field.value}</p>
     </div>)}
@@ -306,9 +308,9 @@ function CategoryFrame({ category, project, set }: { category: CategoryFilter; p
 function MediaPager({ media, mediaIndex, setMediaIndex }: { media: PortfolioMedia[]; mediaIndex: number; setMediaIndex: (updater: (index: number) => number) => void }) {
   if (media.length <= 1) return null
   return <div className="media-pager" aria-label="Project media controls">
-    <button type="button" onClick={() => setMediaIndex((index) => Math.max(0, index - 1))} disabled={mediaIndex === 0} aria-label="Previous media">‹ Media</button>
+    <button className="media-arrow media-arrow-prev" type="button" onClick={() => setMediaIndex((index) => Math.max(0, index - 1))} disabled={mediaIndex === 0} aria-label="Previous media">‹</button>
     <span>{mediaIndex + 1} / {media.length}</span>
-    <button type="button" onClick={() => setMediaIndex((index) => Math.min(media.length - 1, index + 1))} disabled={mediaIndex === media.length - 1} aria-label="Next media">Media ›</button>
+    <button className="media-arrow media-arrow-next" type="button" onClick={() => setMediaIndex((index) => Math.min(media.length - 1, index + 1))} disabled={mediaIndex === media.length - 1} aria-label="Next media">›</button>
   </div>
 }
 
