@@ -189,11 +189,28 @@ function WorkCarousel({ category, works }: { category: CategoryFilter; works: Ar
         <button type="button" onClick={goNext} disabled={activeIndex === total - 1} aria-label={`Next ${category} project`}>Next Project →</button>
       </div>
     </div>
-    <WorkSlide category={category} project={active.project} set={active.set} />
+    <WorkSlide
+      category={category}
+      project={active.project}
+      set={active.set}
+      projectNavigation={{
+        goPrevious,
+        goNext,
+        canGoPrevious: activeIndex > 0,
+        canGoNext: activeIndex < total - 1,
+      }}
+    />
   </div>
 }
 
-function WorkSlide({ category, project, set }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet }) {
+type ProjectNavigation = {
+  goPrevious: () => void
+  goNext: () => void
+  canGoPrevious: boolean
+  canGoNext: boolean
+}
+
+function WorkSlide({ category, project, set, projectNavigation }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet; projectNavigation: ProjectNavigation }) {
   const descriptor = set.description ?? (project.title !== set.title ? project.title : undefined)
   return <article className={`work-slide frame-${slugLabel(category)}`} aria-labelledby={`${project.id}-${set.id}-slide-title`}>
     <div className="slide-copy">
@@ -202,7 +219,7 @@ function WorkSlide({ category, project, set }: { category: CategoryFilter; proje
       {descriptor && <p className="work-description">{descriptor}</p>}
       <ProjectIntelligence category={category} project={project} set={set} descriptor={descriptor} />
     </div>
-    <CategoryFrame category={category} project={project} set={set} />
+    <CategoryFrame category={category} project={project} set={set} projectNavigation={projectNavigation} />
   </article>
 }
 
@@ -266,7 +283,7 @@ function paletteForWork(client: string, title: string) {
   return []
 }
 
-function CategoryFrame({ category, project, set }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet }) {
+function CategoryFrame({ category, project, set, projectNavigation }: { category: CategoryFilter; project: PortfolioProject; set: PortfolioCreativeSet; projectNavigation: ProjectNavigation }) {
   const [mediaIndex, setMediaIndex] = useState(0)
   useEffect(() => {
     setMediaIndex(0)
@@ -283,7 +300,7 @@ function CategoryFrame({ category, project, set }: { category: CategoryFilter; p
     if (!activeMedia) return null
     return <div className={frameClass}>
       <MediaFrame media={activeMedia} className="outlet-video active-video" />
-      <MediaPager media={media} mediaIndex={mediaIndex} setMediaIndex={setMediaIndex} />
+      <StagePager media={media} mediaIndex={mediaIndex} setMediaIndex={setMediaIndex} projectNavigation={projectNavigation} />
     </div>
   }
 
@@ -292,6 +309,7 @@ function CategoryFrame({ category, project, set }: { category: CategoryFilter; p
       <div className="media-grid equal-pair">
         {media.slice(0, 2).map((item, index) => <MediaFrame key={item.id} media={item} className={`${outletClassFor(category, project.client)} media-slot-${index + 1}`} />)}
       </div>
+      <ProjectStagePager projectNavigation={projectNavigation} />
     </div>
   }
 
@@ -301,16 +319,24 @@ function CategoryFrame({ category, project, set }: { category: CategoryFilter; p
     <div className="media-grid media-main-grid">
       <MediaFrame media={activeMedia} className={`${outletClassFor(category, project.client)} media-slot-1`} />
     </div>
-    <MediaPager media={media} mediaIndex={mediaIndex} setMediaIndex={setMediaIndex} />
+    <StagePager media={media} mediaIndex={mediaIndex} setMediaIndex={setMediaIndex} projectNavigation={projectNavigation} />
   </div>
 }
 
-function MediaPager({ media, mediaIndex, setMediaIndex }: { media: PortfolioMedia[]; mediaIndex: number; setMediaIndex: (updater: (index: number) => number) => void }) {
-  if (media.length <= 1) return null
+function StagePager({ media, mediaIndex, setMediaIndex, projectNavigation }: { media: PortfolioMedia[]; mediaIndex: number; setMediaIndex: (updater: (index: number) => number) => void; projectNavigation: ProjectNavigation }) {
+  if (media.length <= 1) return <ProjectStagePager projectNavigation={projectNavigation} />
   return <div className="media-pager" aria-label="Project media controls">
     <button className="media-arrow media-arrow-prev" type="button" onClick={() => setMediaIndex((index) => Math.max(0, index - 1))} disabled={mediaIndex === 0} aria-label="Previous media">‹</button>
     <span>{mediaIndex + 1} / {media.length}</span>
     <button className="media-arrow media-arrow-next" type="button" onClick={() => setMediaIndex((index) => Math.min(media.length - 1, index + 1))} disabled={mediaIndex === media.length - 1} aria-label="Next media">›</button>
+  </div>
+}
+
+function ProjectStagePager({ projectNavigation }: { projectNavigation: ProjectNavigation }) {
+  if (!projectNavigation.canGoPrevious && !projectNavigation.canGoNext) return null
+  return <div className="media-pager project-stage-pager" aria-label="Project navigation controls">
+    <button className="media-arrow media-arrow-prev" type="button" onClick={projectNavigation.goPrevious} disabled={!projectNavigation.canGoPrevious} aria-label="Previous project">‹</button>
+    <button className="media-arrow media-arrow-next" type="button" onClick={projectNavigation.goNext} disabled={!projectNavigation.canGoNext} aria-label="Next project">›</button>
   </div>
 }
 
