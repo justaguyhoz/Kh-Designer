@@ -23,15 +23,17 @@ function mediaIsVideo(media: CinematicMedia) {
 
 function CinematicHeader({
   openProject,
+  openIndex,
 }: {
   openProject: (project: CinematicProject) => void
+  openIndex: () => void
 }) {
   const firstProject = cinematicProjects[0]
 
   return <header className="cinematic-header" aria-label="Cinematic portfolio navigation">
     <a className="brand cinematic-brand" href="/" aria-label="Katty Hozavsky cinematic portfolio"><span>KH</span><small>Designer</small></a>
     <nav aria-label="Cinematic navigation">
-      <a href="#cinematic-work">Work</a>
+      <button type="button" onClick={openIndex}>Work</button>
       <button type="button" onClick={() => openProject(firstProject)}>Explore</button>
       <a href="/classic">View classic portfolio</a>
       <a href="#cinematic-about">About</a>
@@ -99,7 +101,6 @@ function CategoryIndex({ activeCategory }: { activeCategory: CinematicCategoryId
     <div className="index-line" aria-hidden="true" />
     {cinematicCategories.map((category) => <a key={category.id} href={`#zone-${category.id}`} className={activeCategory === category.id ? 'active' : undefined}>
       <span>{category.label}</span>
-      <small>{category.scene}</small>
     </a>)}
   </aside>
 }
@@ -108,13 +109,15 @@ function ZoneStation({
   project,
   category,
   openProject,
+  approachingProjectId,
 }: {
   project: CinematicProject
   category: CinematicCategory
   openProject: (project: CinematicProject) => void
+  approachingProjectId: string | null
 }) {
   return <button
-    className={`project-station station-${project.environment}`}
+    className={`project-station station-${project.environment}${approachingProjectId === project.id ? ' approaching' : ''}`}
     type="button"
     onClick={() => openProject(project)}
     aria-label={`Open ${project.client} ${project.title}`}
@@ -133,9 +136,11 @@ function ZoneStation({
 function CinematicZone({
   category,
   openProject,
+  approachingProjectId,
 }: {
   category: CinematicCategory
   openProject: (project: CinematicProject) => void
+  approachingProjectId: string | null
 }) {
   const projects = projectsByCategory(category.id)
 
@@ -146,12 +151,56 @@ function CinematicZone({
       <i />
     </div>
     <div className="zone-copy">
-      <p>{category.scene}</p>
       <h2 id={`${category.id}-title`}>{category.label}</h2>
-      <span>{category.summary}</span>
     </div>
     <div className="station-grid">
-      {projects.map((project) => <ZoneStation key={project.id} project={project} category={category} openProject={openProject} />)}
+      {projects.map((project) => <ZoneStation key={project.id} project={project} category={category} openProject={openProject} approachingProjectId={approachingProjectId} />)}
+    </div>
+  </section>
+}
+
+function WorkIndex({
+  open,
+  close,
+  openProject,
+}: {
+  open: boolean
+  close: () => void
+  openProject: (project: CinematicProject) => void
+}) {
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [close, open])
+
+  return <section className={open ? 'work-index open' : 'work-index'} aria-hidden={!open} aria-labelledby="work-index-title">
+    <div className="work-index-panel" role="dialog" aria-modal="true" aria-label="Project and category index">
+      <div className="work-index-top">
+        <p className="eyebrow">Work</p>
+        <button type="button" onClick={close} aria-label="Close work index">Close</button>
+      </div>
+      <h2 id="work-index-title">Select a station</h2>
+      <div className="work-index-grid">
+        {cinematicCategories.map((category) => {
+          const projects = projectsByCategory(category.id)
+          return <div className="work-index-category" key={category.id}>
+            <a href={`#zone-${category.id}`} onClick={close}>{category.label}</a>
+            <div>
+              {projects.map((project) => <button key={project.id} type="button" onClick={() => {
+                close()
+                openProject(project)
+              }}>
+                <span>{project.client}</span>
+                <strong>{project.title}</strong>
+              </button>)}
+            </div>
+          </div>
+        })}
+      </div>
     </div>
   </section>
 }
@@ -310,6 +359,7 @@ export function CinematicPrototype() {
   const [activeProject, setActiveProjectState] = useState<CinematicProject | null>(null)
   const [approachingProjectId, setApproachingProjectId] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<CinematicCategoryId>('social-ads')
+  const [indexOpen, setIndexOpen] = useState(false)
 
   const setProject = useCallback((project: CinematicProject, updateHistory = true) => {
     setActiveProjectState(project)
@@ -366,14 +416,15 @@ export function CinematicPrototype() {
   }, [])
 
   return <main className={activeProject ? 'cinematic-root project-is-open' : 'cinematic-root'} id="top">
-    <CinematicHeader openProject={openProject} />
+    <CinematicHeader openProject={openProject} openIndex={() => setIndexOpen(true)} />
     <CategoryIndex activeCategory={activeCategory} />
     <CityScene approachingProjectId={approachingProjectId} openProject={openProject} />
     <div id="cinematic-work">
-      {cinematicCategories.map((category) => <CinematicZone key={category.id} category={category} openProject={openProject} />)}
+      {cinematicCategories.map((category) => <CinematicZone key={category.id} category={category} openProject={openProject} approachingProjectId={approachingProjectId} />)}
     </div>
     <AboutContact />
     <Footer />
     <ProjectLayer project={activeProject} closeProject={closeProject} setProject={(project) => setProject(project)} />
+    <WorkIndex open={indexOpen} close={() => setIndexOpen(false)} openProject={openProject} />
   </main>
 }
