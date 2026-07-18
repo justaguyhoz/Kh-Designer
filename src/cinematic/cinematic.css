@@ -416,10 +416,17 @@
   background: #0b0909;
 }
 
+.station-screen {
+  min-height: min(62svh, 620px);
+  display: grid;
+  place-items: center;
+}
+
 .station-screen img,
 .station-screen video {
   width: 100%;
-  height: min(62svh, 620px);
+  height: auto;
+  max-height: min(62svh, 620px);
   object-fit: contain;
   background: #130f10;
 }
@@ -992,7 +999,11 @@
 
   .station-screen img,
   .station-screen video {
-    height: min(54svh, 470px);
+    max-height: min(54svh, 470px);
+  }
+
+  .station-screen {
+    min-height: min(54svh, 470px);
   }
 
   .featured-caption h3 {
