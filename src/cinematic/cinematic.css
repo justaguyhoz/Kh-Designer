@@ -16,6 +16,11 @@
   scroll-behavior: smooth;
 }
 
+body:has(.cinematic-root) {
+  overflow-x: hidden;
+  background: #120d0d;
+}
+
 .cinematic-root *,
 .cinematic-root *::before,
 .cinematic-root *::after {
@@ -424,11 +429,16 @@
 
 .station-screen img,
 .station-screen video {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: auto;
   max-height: min(62svh, 620px);
   object-fit: contain;
   background: #130f10;
+}
+
+.station-screen video {
+  width: min(100%, 920px);
 }
 
 .cinematic-zone {
@@ -530,7 +540,7 @@
   --pointer-y: 0;
   width: min(100%, 1040px);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  grid-template-columns: minmax(0, 1fr) minmax(190px, min(24vw, 280px));
   grid-template-areas:
     "screen caption"
     "screen controls";
@@ -563,6 +573,8 @@
   gap: 9px;
   align-self: end;
   text-shadow: 0 18px 34px rgba(0, 0, 0, .3);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .featured-caption p {
@@ -578,9 +590,11 @@
 .featured-caption h3 {
   margin: 0;
   color: var(--cream);
-  font-size: clamp(42px, 5vw, 78px);
+  font-size: clamp(36px, 4.4vw, 68px);
   font-weight: 500;
   line-height: .92;
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 .featured-caption span {

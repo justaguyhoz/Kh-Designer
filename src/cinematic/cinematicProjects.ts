@@ -99,6 +99,7 @@ export const cinematicProjects: CinematicProject[] = [
       { label: 'Type of work', value: 'Social campaign' },
     ],
     palette: ['#f3c8c5', '#f6e4dc', '#9c5552', '#2d0a0b'],
+    featuredMediaIndex: 1,
     media: [
       { src: '/projects/Charlie Hair rollers/TOF_ads + vid/TOF_ad_2.jpg', type: 'image', alt: 'Charlii No Heat Damage social campaign creative' },
       { src: '/projects/Charlie Hair rollers/TOF_ads + vid/TOF_ad-2_landscape.jpg', type: 'image', alt: 'Charlii No Heat Damage landscape campaign creative' },
