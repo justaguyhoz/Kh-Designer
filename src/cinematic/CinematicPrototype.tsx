@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent } from 'react'
 import {
   cinematicCategories,
   cinematicProjects,
@@ -22,27 +22,21 @@ function mediaIsVideo(media: CinematicMedia) {
 }
 
 function CinematicHeader({
-  openProject,
-  openIndex,
+  openFirstProject,
 }: {
-  openProject: (project: CinematicProject) => void
-  openIndex: () => void
+  openFirstProject: () => void
 }) {
-  const firstProject = cinematicProjects[0]
-
   return <header className="cinematic-header" aria-label="Cinematic portfolio navigation">
     <a className="brand cinematic-brand" href="/" aria-label="Katty Hozavsky cinematic portfolio"><span>KH</span><small>Designer</small></a>
     <nav aria-label="Cinematic navigation">
-      <button type="button" onClick={openIndex}>Work</button>
-      <button type="button" onClick={() => openProject(firstProject)}>Explore</button>
-      <a href="/classic">View classic portfolio</a>
-      <a href="#cinematic-about">About</a>
+      <a href="#zone-social-ads">Work</a>
+      <button type="button" onClick={openFirstProject}>Explore</button>
       <a href="#cinematic-contact">Contact</a>
     </nav>
   </header>
 }
 
-function StationMedia({ project, eager = false }: { project: CinematicProject; eager?: boolean }) {
+function StationMedia({ project, eager = false, active = true }: { project: CinematicProject; eager?: boolean; active?: boolean }) {
   const featured = project.media[project.featuredMediaIndex ?? 0]
   if (!featured) return null
 
@@ -50,87 +44,82 @@ function StationMedia({ project, eager = false }: { project: CinematicProject; e
     return <video src={featured.src} muted playsInline preload="metadata" aria-label={featured.alt} />
   }
 
-  return <img src={featured.src} alt={featured.alt} loading={eager ? 'eager' : 'lazy'} />
-}
-
-function CityScene({
-  approachingProjectId,
-  openProject,
-}: {
-  approachingProjectId: string | null
-  openProject: (project: CinematicProject) => void
-}) {
-  const heroProject = cinematicProjects[0]
-  const isApproaching = approachingProjectId === heroProject.id
-
-  return <section className={isApproaching ? 'cinematic-scene approaching' : 'cinematic-scene'} aria-labelledby="cinematic-title">
-    <div className="skyline" aria-hidden="true">
-      <i className="tower tower-one" />
-      <i className="tower tower-two" />
-      <i className="tower tower-three" />
-      <i className="tower tower-four" />
-    </div>
-    <div className="street-glow" aria-hidden="true" />
-    <div className="architecture" aria-hidden="true">
-      <i className="column column-left" />
-      <i className="column column-right" />
-      <i className="awning" />
-    </div>
-    <div className="scene-copy">
-      <p>Katty Hozavsky</p>
-      <h1 id="cinematic-title">Senior Designer</h1>
-      <span>Selected digital work, brought into view.</span>
-    </div>
-    <button className="digital-station hero-station" type="button" onClick={() => openProject(heroProject)} aria-label="Open Charlii project station">
-      <span className="station-kicker">Now showing</span>
-      <span className="station-screen">
-        <StationMedia project={heroProject} eager />
-      </span>
-      <span className="station-label">Open Charlii</span>
-    </button>
-    <div className="foreground-figures" aria-hidden="true">
-      <i />
-      <i />
-      <i />
-    </div>
-  </section>
+  return <img src={featured.src} alt={featured.alt} loading={eager && active ? 'eager' : 'lazy'} />
 }
 
 function CategoryIndex({ activeCategory }: { activeCategory: CinematicCategoryId }) {
-  return <aside className="category-index" aria-label="Cinematic category index">
-    <div className="index-line" aria-hidden="true" />
-    {cinematicCategories.map((category) => <a key={category.id} href={`#zone-${category.id}`} className={activeCategory === category.id ? 'active' : undefined}>
-      <span>{category.label}</span>
-    </a>)}
+  return <aside className="category-index" aria-label="Cinematic category index and information">
+    <nav aria-label="Portfolio categories">
+      <div className="index-line" aria-hidden="true" />
+      {cinematicCategories.map((category) => <a key={category.id} href={`#zone-${category.id}`} className={activeCategory === category.id ? 'active' : undefined}>
+        <span>{category.label}</span>
+      </a>)}
+    </nav>
+    <div className="rail-info" id="cinematic-about">
+      <p>About</p>
+      <strong>Katty Hozavsky</strong>
+      <span>Senior Designer &amp; Social Media Creator</span>
+      <em>Brand, campaign, digital, print and social work.</em>
+    </div>
+    <div className="rail-info" id="cinematic-contact">
+      <p>Contact</p>
+      <a href="mailto:justakatty@gmail.com">justakatty@gmail.com</a>
+    </div>
   </aside>
 }
 
-function ZoneStation({
+function FeaturedProjectControls({
+  activeIndex,
+  total,
+  previousProject,
+  nextProject,
+}: {
+  activeIndex: number
+  total: number
+  previousProject: () => void
+  nextProject: () => void
+}) {
+  return <div className="featured-controls" aria-label="Featured project controls">
+    <button type="button" onClick={previousProject} aria-label="Previous featured project">←</button>
+    <span>{String(activeIndex + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span>
+    <button type="button" onClick={nextProject} aria-label="Next featured project">→</button>
+  </div>
+}
+
+function FeaturedProjectDisplay({
   project,
-  category,
   openProject,
   approachingProjectId,
+  activeIndex,
+  total,
+  previousProject,
+  nextProject,
+  onPointerMove,
 }: {
   project: CinematicProject
-  category: CinematicCategory
   openProject: (project: CinematicProject) => void
   approachingProjectId: string | null
+  activeIndex: number
+  total: number
+  previousProject: () => void
+  nextProject: () => void
+  onPointerMove: (event: PointerEvent<HTMLElement>) => void
 }) {
-  return <button
-    className={`project-station station-${project.environment}${approachingProjectId === project.id ? ' approaching' : ''}`}
-    type="button"
-    onClick={() => openProject(project)}
-    aria-label={`Open ${project.client} ${project.title}`}
-  >
-    <span className="station-frame">
-      <StationMedia project={project} />
-    </span>
-    <span className="station-meta">
-      <small>{category.label}</small>
-      <strong>{project.title}</strong>
-      <em>{project.stationLine}</em>
-    </span>
-  </button>
+  return <div className={`featured-project station-${project.environment}${approachingProjectId === project.id ? ' approaching' : ''}`} onPointerMove={onPointerMove}>
+    <button className="featured-screen" type="button" onClick={() => openProject(project)} aria-label={`Open ${project.client} ${project.title}`}>
+      <span className="station-kicker">Now Showing</span>
+      <span className="station-screen">
+        <StationMedia project={project} eager={activeIndex === 0} />
+      </span>
+      <span className="station-label">View Project</span>
+    </button>
+    <div className="featured-caption">
+      <p>{project.client}</p>
+      <h3>{project.title}</h3>
+      <span>{project.descriptor}</span>
+    </div>
+    <FeaturedProjectControls activeIndex={activeIndex} total={total} previousProject={previousProject} nextProject={nextProject} />
+  </div>
 }
 
 function CinematicZone({
@@ -143,6 +132,26 @@ function CinematicZone({
   approachingProjectId: string | null
 }) {
   const projects = projectsByCategory(category.id)
+  const [activeIndex, setActiveIndex] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+  const activeProject = projects[activeIndex] ?? projects[0]
+
+  const previousProject = useCallback(() => {
+    setActiveIndex((index) => (index === 0 ? projects.length - 1 : index - 1))
+  }, [projects.length])
+
+  const nextProject = useCallback(() => {
+    setActiveIndex((index) => (index + 1) % projects.length)
+  }, [projects.length])
+
+  const onPointerMove = useCallback((event: PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'mouse') return
+    const rect = event.currentTarget.getBoundingClientRect()
+    const x = ((event.clientX - rect.left) / rect.width - .5) * 2
+    const y = ((event.clientY - rect.top) / rect.height - .5) * 2
+    event.currentTarget.style.setProperty('--pointer-x', `${x}`)
+    event.currentTarget.style.setProperty('--pointer-y', `${y}`)
+  }, [])
 
   return <section className={`cinematic-zone zone-${category.id}`} id={`zone-${category.id}`} aria-labelledby={`${category.id}-title`}>
     <div className="zone-atmosphere" aria-hidden="true">
@@ -153,54 +162,36 @@ function CinematicZone({
     <div className="zone-copy">
       <h2 id={`${category.id}-title`}>{category.label}</h2>
     </div>
-    <div className="station-grid">
-      {projects.map((project) => <ZoneStation key={project.id} project={project} category={category} openProject={openProject} approachingProjectId={approachingProjectId} />)}
-    </div>
-  </section>
-}
-
-function WorkIndex({
-  open,
-  close,
-  openProject,
-}: {
-  open: boolean
-  close: () => void
-  openProject: (project: CinematicProject) => void
-}) {
-  useEffect(() => {
-    if (!open) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close()
-    }
-    window.addEventListener('keydown', onKeyDown)
-    return () => window.removeEventListener('keydown', onKeyDown)
-  }, [close, open])
-
-  return <section className={open ? 'work-index open' : 'work-index'} aria-hidden={!open} aria-labelledby="work-index-title">
-    <div className="work-index-panel" role="dialog" aria-modal="true" aria-label="Project and category index">
-      <div className="work-index-top">
-        <p className="eyebrow">Work</p>
-        <button type="button" onClick={close} aria-label="Close work index">Close</button>
-      </div>
-      <h2 id="work-index-title">Select a station</h2>
-      <div className="work-index-grid">
-        {cinematicCategories.map((category) => {
-          const projects = projectsByCategory(category.id)
-          return <div className="work-index-category" key={category.id}>
-            <a href={`#zone-${category.id}`} onClick={close}>{category.label}</a>
-            <div>
-              {projects.map((project) => <button key={project.id} type="button" onClick={() => {
-                close()
-                openProject(project)
-              }}>
-                <span>{project.client}</span>
-                <strong>{project.title}</strong>
-              </button>)}
-            </div>
-          </div>
-        })}
-      </div>
+    <div
+      className="featured-wrap"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowLeft') previousProject()
+        if (event.key === 'ArrowRight') nextProject()
+        if (event.key === 'Enter' && activeProject) openProject(activeProject)
+      }}
+      onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null }}
+      onTouchEnd={(event) => {
+        if (touchStartX.current === null) return
+        const delta = event.changedTouches[0].clientX - touchStartX.current
+        touchStartX.current = null
+        if (Math.abs(delta) < 42) return
+        if (delta > 0) previousProject()
+        if (delta < 0) nextProject()
+      }}
+      aria-label={`${category.label} featured project`}
+    >
+      {activeProject ? <FeaturedProjectDisplay
+        key={activeProject.id}
+        project={activeProject}
+        openProject={openProject}
+        approachingProjectId={approachingProjectId}
+        activeIndex={activeIndex}
+        total={projects.length}
+        previousProject={previousProject}
+        nextProject={nextProject}
+        onPointerMove={onPointerMove}
+      /> : null}
     </div>
   </section>
 }
@@ -333,20 +324,6 @@ function ProjectLayer({
   </section>
 }
 
-function AboutContact() {
-  return <section className="cinematic-about-contact" id="cinematic-about" aria-labelledby="cinematic-about-title">
-    <div>
-      <p>About</p>
-      <h2 id="cinematic-about-title">Brand, campaign, digital, print and social work.</h2>
-      <span>Senior Designer &amp; Social Media Creator.</span>
-    </div>
-    <div id="cinematic-contact">
-      <p>Contact</p>
-      <a href="mailto:justakatty@gmail.com">justakatty@gmail.com</a>
-    </div>
-  </section>
-}
-
 function Footer() {
   return <footer className="cinematic-footer">
     <a className="brand cinematic-brand" href="#top" aria-label="Back to top"><span>KH</span><small>Designer</small></a>
@@ -359,7 +336,6 @@ export function CinematicPrototype() {
   const [activeProject, setActiveProjectState] = useState<CinematicProject | null>(null)
   const [approachingProjectId, setApproachingProjectId] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<CinematicCategoryId>('social-ads')
-  const [indexOpen, setIndexOpen] = useState(false)
 
   const setProject = useCallback((project: CinematicProject, updateHistory = true) => {
     setActiveProjectState(project)
@@ -416,15 +392,12 @@ export function CinematicPrototype() {
   }, [])
 
   return <main className={activeProject ? 'cinematic-root project-is-open' : 'cinematic-root'} id="top">
-    <CinematicHeader openProject={openProject} openIndex={() => setIndexOpen(true)} />
+    <CinematicHeader openFirstProject={() => openProject(cinematicProjects[0])} />
     <CategoryIndex activeCategory={activeCategory} />
-    <CityScene approachingProjectId={approachingProjectId} openProject={openProject} />
     <div id="cinematic-work">
       {cinematicCategories.map((category) => <CinematicZone key={category.id} category={category} openProject={openProject} approachingProjectId={approachingProjectId} />)}
     </div>
-    <AboutContact />
     <Footer />
     <ProjectLayer project={activeProject} closeProject={closeProject} setProject={(project) => setProject(project)} />
-    <WorkIndex open={indexOpen} close={() => setIndexOpen(false)} openProject={openProject} />
   </main>
 }
