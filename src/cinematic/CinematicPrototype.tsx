@@ -22,15 +22,20 @@ function mediaIsVideo(media: CinematicMedia) {
 }
 
 function CinematicHeader({
-  openFirstProject,
+  openIndex,
+  exploreActiveCategory,
+  focusAbout,
 }: {
-  openFirstProject: () => void
+  openIndex: () => void
+  exploreActiveCategory: () => void
+  focusAbout: () => void
 }) {
   return <header className="cinematic-header" aria-label="Cinematic portfolio navigation">
     <a className="brand cinematic-brand" href="/" aria-label="Katty Hozavsky cinematic portfolio"><span>KH</span><small>Designer</small></a>
     <nav aria-label="Cinematic navigation">
-      <a href="#zone-social-ads">Work</a>
-      <button type="button" onClick={openFirstProject}>Explore</button>
+      <button type="button" onClick={openIndex}>Work</button>
+      <button type="button" onClick={exploreActiveCategory}>Explore</button>
+      <button type="button" onClick={focusAbout}>About</button>
       <a href="#cinematic-contact">Contact</a>
     </nav>
   </header>
@@ -59,7 +64,7 @@ function CategoryIndex({ activeCategory }: { activeCategory: CinematicCategoryId
       <p>About</p>
       <strong>Katty Hozavsky</strong>
       <span>Senior Designer &amp; Social Media Creator</span>
-      <em>Brand, campaign, digital, print and social work.</em>
+      <em>I’m a Senior Graphic Designer and Creative Marketing Manager with over a decade of experience crafting visually compelling campaigns across Australia and internationally. I combine strong design expertise with hands-on social media and digital marketing experience, leading projects from concept to execution that drive engagement and results. At Powertec Telecommunications and Outback Marine, I oversee creative direction, content creation, video production, packaging design, and major campaigns, connecting creativity with business goals. I’m passionate about turning ideas into impactful visuals and strategies that resonate with audiences.</em>
     </div>
     <div className="rail-info" id="cinematic-contact">
       <p>Contact</p>
@@ -126,23 +131,26 @@ function CinematicZone({
   category,
   openProject,
   approachingProjectId,
+  activeIndex,
+  setActiveIndex,
 }: {
   category: CinematicCategory
   openProject: (project: CinematicProject) => void
   approachingProjectId: string | null
+  activeIndex: number
+  setActiveIndex: (index: number) => void
 }) {
   const projects = projectsByCategory(category.id)
-  const [activeIndex, setActiveIndex] = useState(0)
   const touchStartX = useRef<number | null>(null)
   const activeProject = projects[activeIndex] ?? projects[0]
 
   const previousProject = useCallback(() => {
-    setActiveIndex((index) => (index === 0 ? projects.length - 1 : index - 1))
-  }, [projects.length])
+    setActiveIndex(activeIndex === 0 ? projects.length - 1 : activeIndex - 1)
+  }, [activeIndex, projects.length, setActiveIndex])
 
   const nextProject = useCallback(() => {
-    setActiveIndex((index) => (index + 1) % projects.length)
-  }, [projects.length])
+    setActiveIndex((activeIndex + 1) % projects.length)
+  }, [activeIndex, projects.length, setActiveIndex])
 
   const onPointerMove = useCallback((event: PointerEvent<HTMLElement>) => {
     if (event.pointerType !== 'mouse') return
@@ -192,6 +200,49 @@ function CinematicZone({
         nextProject={nextProject}
         onPointerMove={onPointerMove}
       /> : null}
+    </div>
+  </section>
+}
+
+function WorkIndex({
+  open,
+  close,
+  selectProject,
+}: {
+  open: boolean
+  close: () => void
+  selectProject: (project: CinematicProject) => void
+}) {
+  useEffect(() => {
+    if (!open) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') close()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [close, open])
+
+  return <section className={open ? 'work-index open' : 'work-index'} aria-hidden={!open} aria-labelledby="work-index-title">
+    <div className="work-index-panel" role="dialog" aria-modal="true" aria-label="Project index">
+      <div className="work-index-top">
+        <p className="eyebrow">Work</p>
+        <button type="button" onClick={close} aria-label="Close work index">Close</button>
+      </div>
+      <h2 id="work-index-title">Select Work</h2>
+      <div className="work-index-grid">
+        {cinematicCategories.map((category) => <div className="work-index-category" key={category.id}>
+          <a href={`#zone-${category.id}`} onClick={close}>{category.label}</a>
+          <div>
+            {projectsByCategory(category.id).map((project) => <button key={project.id} type="button" onClick={() => {
+              close()
+              selectProject(project)
+            }}>
+              <span>{project.client}</span>
+              <strong>{project.title}</strong>
+            </button>)}
+          </div>
+        </div>)}
+      </div>
     </div>
   </section>
 }
@@ -336,14 +387,35 @@ export function CinematicPrototype() {
   const [activeProject, setActiveProjectState] = useState<CinematicProject | null>(null)
   const [approachingProjectId, setApproachingProjectId] = useState<string | null>(null)
   const [activeCategory, setActiveCategory] = useState<CinematicCategoryId>('social-ads')
+  const [indexOpen, setIndexOpen] = useState(false)
+  const [categoryIndexes, setCategoryIndexes] = useState<Record<CinematicCategoryId, number>>({
+    'social-ads': 0,
+    'organic-social': 0,
+    'magazine-ads': 0,
+    branding: 0,
+    video: 0,
+  })
+
+  const selectFeaturedProject = useCallback((project: CinematicProject, shouldScroll = true) => {
+    const categoryProjects = projectsByCategory(project.category)
+    const nextIndex = Math.max(0, categoryProjects.findIndex((item) => item.id === project.id))
+    setCategoryIndexes((current) => ({ ...current, [project.category]: nextIndex }))
+    setActiveCategory(project.category)
+    if (shouldScroll) {
+      window.requestAnimationFrame(() => {
+        document.getElementById(`zone-${project.category}`)?.scrollIntoView({ block: 'start' })
+      })
+    }
+  }, [])
 
   const setProject = useCallback((project: CinematicProject, updateHistory = true) => {
+    selectFeaturedProject(project, false)
     setActiveProjectState(project)
     setApproachingProjectId(project.id)
     if (updateHistory && window.location.pathname !== projectPath(project)) {
       window.history.pushState({ projectId: project.id }, '', projectPath(project))
     }
-  }, [])
+  }, [selectFeaturedProject])
 
   const openProject = useCallback((project: CinematicProject) => {
     const reduceMotion = window.matchMedia(reducedMotionQuery).matches
@@ -369,6 +441,7 @@ export function CinematicPrototype() {
       }
       const routedProject = findProject(match[1])
       if (routedProject) {
+        selectFeaturedProject(routedProject, false)
         setActiveProjectState(routedProject)
         setApproachingProjectId(routedProject.id)
       }
@@ -376,7 +449,7 @@ export function CinematicPrototype() {
     applyRoute()
     window.addEventListener('popstate', applyRoute)
     return () => window.removeEventListener('popstate', applyRoute)
-  }, [])
+  }, [selectFeaturedProject])
 
   useEffect(() => {
     const observers = cinematicCategories.map((category) => {
@@ -392,12 +465,24 @@ export function CinematicPrototype() {
   }, [])
 
   return <main className={activeProject ? 'cinematic-root project-is-open' : 'cinematic-root'} id="top">
-    <CinematicHeader openFirstProject={() => openProject(cinematicProjects[0])} />
+    <CinematicHeader
+      openIndex={() => setIndexOpen(true)}
+      exploreActiveCategory={() => document.getElementById(`zone-${activeCategory}`)?.scrollIntoView({ block: 'start' })}
+      focusAbout={() => document.getElementById('cinematic-about')?.scrollIntoView({ block: 'center' })}
+    />
     <CategoryIndex activeCategory={activeCategory} />
     <div id="cinematic-work">
-      {cinematicCategories.map((category) => <CinematicZone key={category.id} category={category} openProject={openProject} approachingProjectId={approachingProjectId} />)}
+      {cinematicCategories.map((category) => <CinematicZone
+        key={category.id}
+        category={category}
+        openProject={openProject}
+        approachingProjectId={approachingProjectId}
+        activeIndex={categoryIndexes[category.id]}
+        setActiveIndex={(index) => setCategoryIndexes((current) => ({ ...current, [category.id]: index }))}
+      />)}
     </div>
     <Footer />
     <ProjectLayer project={activeProject} closeProject={closeProject} setProject={(project) => setProject(project)} />
+    <WorkIndex open={indexOpen} close={() => setIndexOpen(false)} selectProject={(project) => selectFeaturedProject(project)} />
   </main>
 }

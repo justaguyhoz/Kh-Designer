@@ -348,6 +348,7 @@ export const cinematicProjects: CinematicProject[] = [
     ],
     palette: ['#e6a0a6', '#f5d6d3', '#7b2e35'],
     media: [
+      { src: '/projects/Charlie Hair rollers/MOF_ads + vid/MOF_ad-2_landscape.jpg', type: 'image', alt: 'Charlii Mega Marilyn campaign poster frame' },
       { src: '/projects/Charlie Hair rollers/MOF_ads + vid/MOF_Mega Marylin Set.mp4', type: 'video', alt: 'Charlii Mega Marilyn campaign video' },
       { src: '/projects/Charlie Hair rollers/TOF_ads + vid/TOF_video ad.mp4', type: 'video', alt: 'Charlii awareness campaign video' },
     ],
@@ -365,6 +366,7 @@ export const cinematicProjects: CinematicProject[] = [
       { label: 'Campaign', value: 'Traffic, awareness and sales' },
     ],
     media: [
+      { src: '/projects/Powertec/socials.jpg', type: 'image', alt: 'Powertec campaign poster frame' },
       { src: '/projects/Powertec/Powertec_Traffic Facebook Campaign.mp4', type: 'video', alt: 'Powertec traffic Facebook campaign video' },
       { src: '/projects/Powertec/powertec-awarness-facebook-campaign.mp4', type: 'video', alt: 'Powertec awareness Facebook campaign video' },
       { src: '/projects/Powertec/powertec-sales-facebook-campaign.mp4', type: 'video', alt: 'Powertec sales Facebook campaign video' },
@@ -383,6 +385,7 @@ export const cinematicProjects: CinematicProject[] = [
       { label: 'Campaign', value: 'This is Sycamore' },
     ],
     media: [
+      { src: '/projects/The Sycamore school/campaign-1_this-is-Sycamore_1.jpg', type: 'image', alt: 'The Sycamore School campaign poster frame' },
       { src: '/projects/The Sycamore school/Campaign 1_this is Sycamore.mp4', type: 'video', alt: 'The Sycamore School campaign video' },
     ],
   },
