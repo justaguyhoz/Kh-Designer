@@ -49,7 +49,7 @@ function StationMedia({ project, eager = false, active = true }: { project: Cine
     return <video src={featured.src} muted playsInline preload="metadata" aria-label={featured.alt} />
   }
 
-  return <img src={featured.src} alt={featured.alt} loading={eager && active ? 'eager' : 'lazy'} />
+  return <img src={featured.src} alt={featured.alt} loading={eager && active ? 'eager' : 'lazy'} fetchPriority={eager && active ? 'high' : 'auto'} />
 }
 
 function CategoryIndex({ activeCategory }: { activeCategory: CinematicCategoryId }) {
