@@ -12,6 +12,7 @@ import {
   type PortfolioMediaGroup,
   type PortfolioProject,
 } from './data/projects'
+import { CinematicPrototype } from './cinematic/CinematicPrototype'
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -231,7 +232,7 @@ function Contact() {
   </section>
 }
 
-function App() {
+function ClassicPortfolio() {
   useEffect(() => {
     if (!window.location.hash) return
     const scrollToHash = () => document.getElementById(window.location.hash.slice(1))?.scrollIntoView()
@@ -254,6 +255,11 @@ function App() {
       <a href="#top">Back to top ↑</a>
     </footer>
   </>
+}
+
+function App() {
+  if (window.location.pathname === '/classic') return <ClassicPortfolio />
+  return <CinematicPrototype />
 }
 
 export default App
