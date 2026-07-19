@@ -4,6 +4,7 @@ export type CinematicMedia = {
   src: string
   type: 'image' | 'video'
   alt: string
+  shape?: 'wide' | 'square' | 'portrait'
 }
 
 export type CinematicField = {

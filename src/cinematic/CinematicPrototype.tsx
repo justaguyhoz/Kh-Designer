@@ -21,6 +21,14 @@ function mediaIsVideo(media: CinematicMedia) {
   return media.type === 'video'
 }
 
+function mediaShape(media: CinematicMedia) {
+  if (media.shape) return media.shape
+  const src = media.src.toLowerCase()
+  if (src.includes('_landscape') || src.includes('landscape') || src.includes('magazine') || src.includes('socials') || src.includes('packaging')) return 'wide'
+  if (src.includes('_long') || src.includes('portrait')) return 'portrait'
+  return 'square'
+}
+
 function CinematicHeader({
   openIndex,
   exploreActiveCategory,
@@ -301,6 +309,7 @@ function ProjectMedia({
 }) {
   const media = project.media[mediaIndex]
   const touchStartX = useRef<number | null>(null)
+  const shape = mediaShape(media)
 
   const previousMedia = () => setMediaIndex((index) => Math.max(0, index - 1))
   const nextMedia = () => setMediaIndex((index) => Math.min(project.media.length - 1, index + 1))
@@ -314,7 +323,7 @@ function ProjectMedia({
   }, [project.id, mediaIndex])
 
   return <div
-    className={`project-media-stage media-${media.type}`}
+    className={`project-media-stage media-${media.type} media-shape-${shape}`}
     onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null }}
     onTouchEnd={(event) => {
       if (touchStartX.current === null) return

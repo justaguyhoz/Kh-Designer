@@ -882,11 +882,39 @@ body:has(.cinematic-root) {
   background: radial-gradient(circle at 50% 40%, rgba(255, 248, 240, .08), transparent 62%), #0b0909;
 }
 
+.project-media-stage.media-shape-square {
+  aspect-ratio: 1 / 1;
+  width: min(100%, 620px, calc(100svh - 280px));
+  height: auto;
+  max-width: 100%;
+  justify-self: center;
+  align-self: center;
+}
+
+.project-media-stage.media-shape-portrait {
+  aspect-ratio: 4 / 5;
+  width: min(100%, 520px, calc((100svh - 280px) * .8));
+  height: auto;
+  max-width: 100%;
+  justify-self: center;
+  align-self: center;
+}
+
+.project-media-stage.media-shape-wide {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  align-self: center;
+}
+
 .project-media-stage img,
 .project-media-stage video {
   display: block;
   max-width: 100%;
   max-height: 100%;
+  width: auto;
+  height: auto;
   object-fit: contain;
 }
 
@@ -1084,6 +1112,21 @@ body:has(.cinematic-root) {
   .project-media-stage {
     min-height: 420px;
     max-height: 70svh;
+  }
+
+  .project-media-stage.media-shape-square {
+    width: min(100%, 70svw, 62svh);
+    min-height: 0;
+  }
+
+  .project-media-stage.media-shape-portrait {
+    width: min(100%, 60svw, 50svh);
+    min-height: 0;
+  }
+
+  .project-media-stage.media-shape-wide {
+    width: 100%;
+    min-height: 0;
   }
 
   .project-media-stage img,
