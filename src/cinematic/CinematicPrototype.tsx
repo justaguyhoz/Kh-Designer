@@ -42,6 +42,16 @@ function CinematicHeader({
 }
 
 function StationMedia({ project, eager = false, active = true }: { project: CinematicProject; eager?: boolean; active?: boolean }) {
+  if (project.category === 'video') {
+    const videoPosters = projectsByCategory('video')
+      .map((videoProject) => videoProject.media.find((item) => item.type === 'image'))
+      .filter((media): media is CinematicMedia => Boolean(media))
+
+    return <span className="video-snapshot-reel" aria-label="Video campaign snapshots">
+      {videoPosters.slice(0, 4).map((poster) => <img key={poster.src} src={poster.src} alt={poster.alt} loading={active ? 'eager' : 'lazy'} />)}
+    </span>
+  }
+
   const featured = project.media[project.featuredMediaIndex ?? 0]
   if (!featured) return null
 
